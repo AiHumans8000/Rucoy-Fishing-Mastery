@@ -423,8 +423,19 @@
   <div class="fish-art">🎣</div>
   <h1>RUCOY<br>FISHING MASTERY</h1>
   <p class="subtitle">⚓ A FISHING RPG ⚓</p>
-  <input type="text" id="nameInput" placeholder="Enter your name..." maxlength="20">
-  <button class="btn btn-gold" onclick="startGame()">▶ BEGIN ADVENTURE</button>
+
+  <div id="savedGameBanner" style="display:none;background:#0f1628;border:2px solid #ffd700;border-radius:8px;padding:14px 20px;text-align:center;width:290px">
+    <div style="font-size:13px;color:#ffd700;font-weight:bold;margin-bottom:6px">💾 SAVED GAME FOUND</div>
+    <div id="savedGameInfo" style="font-size:12px;color:#c8d8f0;line-height:1.9"></div>
+    <button class="btn btn-gold" onclick="loadGame()" style="width:100%;margin-top:10px;font-size:13px">▶ CONTINUE</button>
+    <button class="btn btn-red" onclick="deleteSave()" style="width:100%;margin-top:6px;font-size:11px">🗑️ DELETE SAVE &amp; NEW GAME</button>
+  </div>
+
+  <div id="newGameSection" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:280px">
+    <input type="text" id="nameInput" placeholder="Enter your name..." maxlength="20">
+    <button class="btn btn-gold" onclick="startGame()" style="width:100%">▶ NEW GAME</button>
+  </div>
+
   <p style="color:var(--dim);font-size:11px;text-align:center;max-width:340px;line-height:1.8">
     Cast your line • Battle fish • Level to 100<br>
     Explore 7 worlds • Collect trophies • Build your legend
@@ -639,6 +650,7 @@
 </div>
 
 <div id="notifContainer"></div>
+<div id="saveIndicator" style="position:fixed;bottom:16px;right:16px;background:#0f1628;border:1px solid #ffd700;border-radius:20px;padding:6px 14px;font-size:12px;color:#ffd700;opacity:0;transition:opacity .5s;z-index:999;pointer-events:none">💾 Saved!</div>
 
 <script>
 // ════════════════════════════════════════════
@@ -944,6 +956,7 @@ function travelTo(mapId) {
   renderMapPanel();
   addLog('⛵ Traveled to ' + map.name + '!', 'info');
   notify('⛵ Arrived at ' + map.name, 'success');
+  saveGame();
 }
 
 function updateMapBanner() {
@@ -1212,6 +1225,7 @@ function catchFish() {
 
   // XP
   gainXP(fData.xp);
+  saveGame();
 
   // Session stats
   GS.sessionCaught++;
@@ -1366,6 +1380,7 @@ function sellAll() {
   renderStorage();
   notify('💰 Sold everything for ' + total + 'G!', 'gold');
   addLog('💰 Sold entire storage for ' + total + 'G', 'gold');
+  saveGame();
 }
 
 function getRarityColor(r) {
@@ -1434,6 +1449,7 @@ function buyItem(id, type, price) {
   renderTopBar();
   renderShop();
   renderEquipSidebar();
+  saveGame();
 }
 
 // ════════════════════════════════════════════
@@ -1663,6 +1679,133 @@ function renderShop() {
   renderShopSection('shopPotions', POTIONS, 'potion');
   renderSpecialShop();
 }
+
+
+// ════════════════════════════════════════════
+//  SAVE / LOAD SYSTEM
+// ════════════════════════════════════════════
+const SAVE_KEY = 'rucoy_fishing_mastery_save';
+
+function saveGame() {
+  try {
+    const saveData = {
+      playerName: GS.playerName,
+      level: GS.level,
+      xp: GS.xp,
+      gold: GS.gold,
+      currentMap: GS.currentMap,
+      storage: GS.storage,
+      trophies: GS.trophies,
+      equip: GS.equip,
+      lineDurability: GS.lineDurability,
+      potionCharges: GS.potionCharges,
+      totalCaught: GS.totalCaught,
+      fishCaught: GS.fishCaught,
+      sessionCaught: GS.sessionCaught,
+      sessionEsc: GS.sessionEsc,
+      sessionGold: GS.sessionGold,
+      sessionBest: GS.sessionBest,
+      savedAt: Date.now()
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+    showSaveIndicator();
+  } catch(e) {
+    console.warn('Save failed:', e);
+  }
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+
+    GS.playerName     = data.playerName     || 'Angler';
+    GS.level          = data.level          || 1;
+    GS.xp             = data.xp             || 0;
+    GS.gold           = data.gold           || 0;
+    GS.currentMap     = data.currentMap     || 'riverside';
+    GS.storage        = data.storage        || [];
+    GS.trophies       = data.trophies       || [];
+    GS.equip          = data.equip          || { rod:'starter', line:'starter', potion:null };
+    GS.lineDurability = data.lineDurability != null ? data.lineDurability : getLineData(GS.equip.line)?.durability || 100;
+    GS.potionCharges  = data.potionCharges  || 0;
+    GS.totalCaught    = data.totalCaught    || 0;
+    GS.fishCaught     = data.fishCaught     || {};
+    GS.sessionCaught  = data.sessionCaught  || 0;
+    GS.sessionEsc     = data.sessionEsc     || 0;
+    GS.sessionGold    = data.sessionGold    || 0;
+    GS.sessionBest    = data.sessionBest    || null;
+
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('gameScreen').style.display = 'flex';
+    document.getElementById('playerName').textContent = GS.playerName.toUpperCase();
+
+    renderTopBar();
+    renderMapPanel();
+    renderShop();
+    renderStorage();
+    renderEquipSidebar();
+    updateSessionStats();
+    startWeatherCycle();
+
+    addLog('💾 Game loaded! Welcome back, ' + GS.playerName + '!', 'gold');
+    addLog('Level ' + GS.level + ' | ' + GS.gold + 'G | ' + GS.storage.length + ' fish in storage.', 'info');
+    notify('💾 Game loaded! Welcome back!', 'gold');
+    return true;
+  } catch(e) {
+    console.warn('Load failed:', e);
+    return false;
+  }
+}
+
+function deleteSave() {
+  if (!confirm('Delete your saved game and start fresh? This cannot be undone!')) return;
+  localStorage.removeItem(SAVE_KEY);
+  document.getElementById('savedGameBanner').style.display = 'none';
+  document.getElementById('newGameSection').style.display = 'flex';
+  notify('Save deleted. Start a new game!', 'error');
+}
+
+function getSaveInfo() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+function showSaveIndicator() {
+  // Show a small floating save icon
+  const el = document.getElementById('saveIndicator');
+  if (!el) return;
+  el.style.opacity = '1';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.style.opacity = '0'; }, 2000);
+}
+
+// Auto-save every 30 seconds while playing
+setInterval(() => {
+  if (document.getElementById('gameScreen').style.display !== 'none') {
+    saveGame();
+  }
+}, 30000);
+
+// Check for saved game on page load
+window.addEventListener('load', () => {
+  const save = getSaveInfo();
+  if (save) {
+    const savedDate = new Date(save.savedAt);
+    const timeStr = savedDate.toLocaleDateString() + ' ' + savedDate.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    document.getElementById('savedGameInfo').innerHTML =
+      '👤 ' + save.playerName + '<br>' +
+      '⭐ Level ' + save.level + '&nbsp;&nbsp;💰 ' + (save.gold||0).toLocaleString() + 'G<br>' +
+      '🐟 ' + (save.totalCaught||0) + ' fish caught<br>' +
+      '🕐 ' + timeStr;
+    document.getElementById('savedGameBanner').style.display = 'block';
+    document.getElementById('newGameSection').style.display = 'none';
+  }
+});
 
 </script>
 </body>
