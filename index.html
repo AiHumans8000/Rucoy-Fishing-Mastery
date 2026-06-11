@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Rucoy Fishing Mastery</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#0a0e1a;color:#c8d8f0;font-family:'Courier New',Courier,monospace;min-height:100vh;overflow-x:hidden;font-size:14px}
+:root{--bg:#0a0e1a;--panel:#0f1628;--panel2:#131c35;--border:#1e3a5f;--accent:#00d4ff;--gold:#ffd700;--green:#00ff88;--red:#ff4444;--purple:#b44bff;--dim:#4a6080;--common:#aaaaaa;--uncommon:#55ff55;--epic:#aa00ff;--rare:#0088ff;--legend:#ff8800;--master:#ff0055}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--panel)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* START */
+#startScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px;padding:20px;background:radial-gradient(ellipse at center,#0a1a3a 0%,#0a0e1a 70%)}
+#startScreen h1{font-size:clamp(22px,5vw,40px);font-weight:900;letter-spacing:4px;color:var(--accent);text-shadow:0 0 20px var(--accent);text-align:center;line-height:1.8}
+.subtitle{font-size:18px;color:var(--gold);letter-spacing:3px}
+.fish-art{font-size:80px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.saved-banner{background:var(--panel);border:2px solid var(--gold);border-radius:8px;padding:14px;text-align:center;width:290px;display:none}
+.saved-banner h3{color:var(--gold);font-size:13px;margin-bottom:8px}
+.saved-info{font-size:12px;color:var(--dim);line-height:2}
+#nameInput{background:var(--panel2);border:2px solid var(--accent);color:var(--accent);font-family:'Courier New',monospace;font-size:16px;padding:12px;border-radius:6px;outline:none;text-align:center;width:280px}
+#nameInput::placeholder{color:var(--dim)}
+.btn{background:transparent;border:2px solid var(--accent);color:var(--accent);font-family:'Courier New',monospace;font-size:14px;padding:10px 24px;cursor:pointer;transition:all .2s;border-radius:4px;letter-spacing:1px;width:280px}
+.btn:hover,.btn:active{background:var(--accent);color:var(--bg)}
+.btn-gold{border-color:var(--gold);color:var(--gold)}.btn-gold:hover,.btn-gold:active{background:var(--gold);color:var(--bg)}
+.btn-red{border-color:var(--red);color:var(--red)}.btn-red:hover,.btn-red:active{background:var(--red);color:#fff}
+.btn-green{border-color:var(--green);color:var(--green)}.btn-green:hover,.btn-green:active{background:var(--green);color:var(--bg)}
+.btn-sm{width:auto;padding:6px 14px;font-size:12px}
+
+/* GAME */
+#gameScreen{display:none;flex-direction:column;min-height:100vh}
+
+/* TOPBAR */
+#topBar{background:var(--panel);border-bottom:2px solid var(--border);padding:6px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:100}
+.chip{background:var(--panel2);border:1px solid var(--border);padding:3px 8px;border-radius:16px;font-size:11px;white-space:nowrap}
+.chip .lbl{color:var(--dim)}
+.chip .val{color:var(--accent);font-weight:bold}
+#xpWrap{flex:1;min-width:120px}
+.xp-bg{background:#1a2040;border-radius:4px;height:6px;border:1px solid var(--border);overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,#0088ff,#00d4ff);transition:width .4s;border-radius:4px}
+.xp-lbl{font-size:10px;color:var(--dim);margin-top:1px}
+#pname{font-size:11px;font-weight:bold;color:var(--gold)}
+
+/* TABS */
+#tabs{background:var(--panel);border-bottom:2px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none}
+#tabs::-webkit-scrollbar{display:none}
+.tab{background:transparent;border:none;border-bottom:3px solid transparent;color:var(--dim);font-family:'Courier New',monospace;font-size:12px;padding:8px 12px;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* PANELS */
+#content{flex:1;padding:12px;max-width:900px;width:100%;margin:0 auto}
+.panel{display:none}.panel.on{display:block}
+.sec-title{font-size:12px;font-weight:bold;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:12px;letter-spacing:1px}
+
+/* FISHING */
+#fishArea{display:grid;grid-template-columns:1fr 300px;gap:12px}
+@media(max-width:700px){#fishArea{grid-template-columns:1fr}}
+.pond{background:var(--panel2);border:2px solid var(--border);border-radius:8px;padding:16px;min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.water{position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(180deg,transparent,rgba(0,100,200,.25));pointer-events:none}
+.idle-icon{font-size:70px;animation:float 3s ease-in-out infinite}
+.idle-txt{color:var(--dim);font-size:12px;margin-top:10px;text-align:center}
+#castBtn{font-size:13px;font-weight:bold;padding:14px;margin-top:14px;width:90%}
+
+/* CATCH GAME */
+#cg{display:none;width:100%}
+.cg-fish{text-align:center;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.cg-sprite{font-size:52px;animation:wiggle .4s ease-in-out infinite alternate}
+@keyframes wiggle{0%{transform:rotate(-8deg)}100%{transform:rotate(8deg)}}
+.cg-name{font-size:13px;font-weight:bold;margin-top:6px}
+.rb{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;margin-top:3px;font-weight:bold}
+.r-common{background:#222;color:var(--common);border:1px solid var(--common)}
+.r-uncommon{background:#0d2e0d;color:var(--uncommon);border:1px solid var(--uncommon)}
+.r-epic{background:#1a0033;color:var(--epic);border:1px solid var(--epic)}
+.r-rare{background:#001a33;color:var(--rare);border:1px solid var(--rare)}
+.r-legend{background:#2d1a00;color:var(--legend);border:1px solid var(--legend)}
+.r-master{background:#330011;color:var(--master);border:1px solid var(--master)}
+.bar-wrap{margin:8px 0}
+.bar-lbl{font-size:10px;color:var(--dim);display:flex;justify-content:space-between;margin-bottom:3px}
+.bar-bg{border-radius:4px;height:12px;overflow:hidden;border:1px solid var(--border)}
+.bar-fill{height:100%;border-radius:4px;transition:width .3s}
+.hp-fill{background:linear-gradient(90deg,#ff2200,#ff6600)}
+.cr-fill{background:linear-gradient(90deg,#00aa33,#00ff88)}
+.dir-prompt{text-align:center;font-size:16px;font-weight:bold;color:var(--gold);margin:8px 0;animation:pulse .8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.dir-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:150px;margin:8px auto}
+.dir-btn{background:var(--panel);border:2px solid var(--border);color:var(--text);font-size:20px;padding:10px;cursor:pointer;border-radius:6px;transition:all .15s;text-align:center;-webkit-tap-highlight-color:transparent}
+.dir-btn:active{transform:scale(.9)}
+.dir-btn.ok{background:rgba(0,255,136,.25);border-color:var(--green)}
+.dir-btn.no{background:rgba(255,68,68,.25);border-color:var(--red)}
+.combo{text-align:center;font-size:12px;color:var(--gold);min-height:18px}
+
+/* SIDEBAR */
+.side{background:var(--panel2);border:2px solid var(--border);border-radius:8px;padding:12px}
+.side h3{font-size:11px;font-weight:bold;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px;letter-spacing:1px}
+.eq-slot{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:8px;margin-bottom:6px}
+.eq-lbl{font-size:10px;color:var(--dim);margin-bottom:3px}
+.eq-val{font-size:12px;font-weight:bold}
+.dur-bg{height:4px;background:#1a1a2a;border-radius:2px;margin-top:4px;overflow:hidden}
+.dur-fill{height:100%;border-radius:2px;transition:width .3s}
+.log{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:8px;height:160px;overflow-y:auto;font-size:11px;line-height:1.9}
+.log-e{border-bottom:1px solid #1a2040;padding:1px 0}
+.log-s{color:var(--green)}.log-f{color:var(--red)}.log-i{color:var(--accent)}.log-g{color:var(--gold)}
+
+/* MAPS */
+.map-banner{background:var(--panel2);border:2px solid var(--green);border-radius:8px;padding:14px;margin-bottom:14px;display:flex;gap:12px;align-items:center}
+.map-big{font-size:56px}
+.map-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.map-card{background:var(--panel2);border:2px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;transition:all .2s;position:relative}
+.map-card:active:not(.locked){transform:scale(.98)}
+.map-card.here{border-color:var(--green);box-shadow:0 0 16px rgba(0,255,136,.2)}
+.map-card.locked{opacity:.5;cursor:not-allowed}
+.map-art{font-size:40px;margin-bottom:6px}
+.map-name{font-size:11px;font-weight:bold;color:var(--accent);margin-bottom:4px}
+.map-desc{font-size:11px;color:var(--dim);line-height:1.6}
+.map-req{font-size:11px;color:var(--gold);margin-top:4px}
+.lock-ico{position:absolute;top:8px;right:8px;font-size:18px}
+.w-badge{display:inline-block;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:2px 8px;font-size:11px;margin-top:4px}
+
+/* STORAGE */
+.stor-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.fish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.fish-card{background:var(--panel2);border:2px solid var(--border);border-radius:6px;padding:10px;text-align:center;position:relative}
+.fish-card .fi{font-size:32px;margin-bottom:4px}
+.fish-card .fn{font-size:12px;font-weight:bold;margin-bottom:3px}
+.fish-card .fq{font-size:11px;color:var(--dim)}
+.fish-card .fv{font-size:12px;color:var(--gold);margin-top:3px}
+.fish-trophy{position:absolute;top:6px;right:6px;font-size:18px}
+.sell-btn{background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:'Courier New',monospace;font-size:11px;padding:4px 8px;cursor:pointer;border-radius:3px;margin-top:6px;width:100%;transition:all .2s}
+.sell-btn:active{background:var(--gold);color:var(--bg)}
+.empty{text-align:center;padding:40px 20px;color:var(--dim)}
+.empty-ico{font-size:56px;margin-bottom:10px}
+
+/* SHOP / BAIT / FOOD */
+.shop-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.shop-2col{grid-template-columns:1fr}}
+.shop-sec h3{font-size:11px;font-weight:bold;color:var(--accent);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.s-item{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px;display:flex;gap:10px;align-items:center;transition:border-color .2s}
+.s-item:hover{border-color:var(--accent)}
+.s-ico{font-size:28px;flex-shrink:0}
+.s-info{flex:1;min-width:0}
+.s-name{font-size:12px;font-weight:bold;margin-bottom:2px}
+.s-desc{font-size:11px;color:var(--dim);line-height:1.5}
+.s-price{font-size:12px;color:var(--gold);margin-top:3px}
+.s-tier{font-size:10px;margin-top:2px}
+.buy-btn{background:transparent;border:1px solid var(--green);color:var(--green);font-family:'Courier New',monospace;font-size:11px;padding:5px 10px;cursor:pointer;border-radius:3px;transition:all .2s;flex-shrink:0}
+.buy-btn:active{background:var(--green);color:var(--bg)}
+.buy-btn:disabled{opacity:.4;cursor:not-allowed}
+.tc{color:var(--common)}.tu{color:var(--uncommon)}.te{color:var(--epic)}.tr{color:var(--rare)}.tl{color:var(--legend)}.tm{color:var(--master);text-shadow:0 0 8px var(--master)}
+
+/* TROPHIES */
+.trophy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.t-card{background:var(--panel2);border:2px solid var(--border);border-radius:8px;padding:14px;text-align:center}
+.t-card.bronze{border-color:#cd7f32}.t-card.silver{border-color:#c0c0c0}.t-card.gold{border-color:var(--gold);box-shadow:0 0 10px rgba(255,215,0,.3)}
+.t-ico{font-size:36px;margin-bottom:6px}
+.t-name{font-size:12px;font-weight:bold;margin-bottom:3px}
+.t-desc{font-size:11px;color:var(--dim)}
+
+/* INN */
+.inn-card{background:var(--panel2);border:2px solid var(--border);border-radius:10px;padding:18px;max-width:460px;margin:0 auto;text-align:center}
+.inn-art{font-size:60px;margin-bottom:8px}
+.inn-name{font-size:15px;font-weight:bold;color:var(--accent);margin-bottom:6px}
+.inn-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.inn-stat{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:8px}
+.inn-stat-lbl{font-size:10px;color:var(--dim)}
+.inn-stat-val{font-size:14px;font-weight:bold;margin-top:2px}
+.rest-prog{background:#1a2040;border-radius:6px;height:14px;overflow:hidden;margin:8px 0;border:1px solid var(--border)}
+.rest-fill{height:100%;background:linear-gradient(90deg,#0088ff,#00d4ff);transition:width 1s;border-radius:6px}
+.scream-box{background:rgba(255,215,0,.08);border:2px solid var(--gold);border-radius:8px;padding:12px;margin-top:10px}
+.scream-meter{background:#1a0a0a;border-radius:4px;height:18px;overflow:hidden;margin-top:6px;border:1px solid #400}
+.scream-fill{height:100%;background:linear-gradient(90deg,#ff2200,#ff6600);transition:width .1s;border-radius:4px}
+
+/* FOOD GRID */
+.food-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.f-card{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center}
+.f-ico{font-size:36px;margin-bottom:6px}
+.f-name{font-size:12px;font-weight:bold;margin-bottom:3px}
+.f-desc{font-size:10px;color:var(--dim);margin-bottom:4px;line-height:1.5}
+.f-effect{font-size:11px;margin-bottom:4px}
+.f-stock{font-size:10px;color:var(--dim);margin-bottom:4px}
+.f-price{font-size:12px;color:var(--gold);margin-bottom:6px}
+.eat-btn{background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Courier New',monospace;font-size:11px;padding:4px 8px;cursor:pointer;border-radius:3px;width:100%;margin-top:3px;transition:all .2s}
+.eat-btn:active{background:var(--accent);color:var(--bg)}
+
+/* BAIT */
+.bait-eq{background:var(--panel2);border:2px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;display:flex;gap:12px;align-items:center}
+.bait-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+
+/* MODALS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;align-items:center;justify-content:center;padding:16px}
+.overlay.on{display:flex}
+.modal{background:var(--panel);border:2px solid var(--accent);border-radius:10px;padding:20px;max-width:440px;width:100%;max-height:85vh;overflow-y:auto}
+.modal h2{font-size:14px;font-weight:bold;color:var(--accent);margin-bottom:14px;text-align:center;letter-spacing:1px}
+.modal-acts{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.res-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.res-stat{background:var(--panel2);border:1px solid var(--border);padding:8px 10px;border-radius:4px}
+.res-lbl{font-size:10px;color:var(--dim)}
+.res-val{font-size:14px;font-weight:bold;margin-top:2px}
+.trophy-earned{background:rgba(255,215,0,.1);border:2px solid var(--gold);border-radius:8px;padding:10px;margin:10px 0;text-align:center}
+.lvl-num{font-size:44px;font-weight:900;color:var(--gold);text-align:center;margin:10px 0;animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
+
+/* NOTIFS */
+#notifs{position:fixed;top:70px;right:12px;z-index:500;display:flex;flex-direction:column;gap:6px;pointer-events:none;max-width:260px}
+.notif{background:var(--panel2);border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;font-size:12px;animation:slideIn .3s ease-out;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+.notif.ns{border-color:var(--green)}.notif.ne{border-color:var(--red)}.notif.ng{border-color:var(--gold)}.notif.nm{border-color:var(--master)}
+@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+#saveIco{position:fixed;bottom:14px;right:14px;background:var(--panel);border:1px solid var(--gold);border-radius:16px;padding:5px 12px;font-size:12px;color:var(--gold);opacity:0;transition:opacity .5s;z-index:400;pointer-events:none}
+</style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div id="startScreen">
+  <div class="fish-art">🎣</div>
+  <h1>RUCOY<br>FISHING MASTERY</h1>
+  <p class="subtitle">⚓ A FISHING RPG ⚓</p>
+  <div class="saved-banner" id="savedBanner">
+    <h3>💾 SAVED GAME FOUND</h3>
+    <div class="saved-info" id="savedInfo"></div>
+    <button class="btn btn-gold" onclick="loadGame()" style="margin-top:8px">▶ CONTINUE</button>
+    <button class="btn btn-red" onclick="deleteSave()" style="margin-top:6px;font-size:12px">🗑️ DELETE &amp; NEW GAME</button>
+  </div>
+  <div id="newGameDiv" style="display:flex;flex-direction:column;align-items:center;gap:10px">
+    <input type="text" id="nameInput" placeholder="Enter your name..." maxlength="20">
+    <button class="btn btn-gold" onclick="startNewGame()">▶ NEW GAME</button>
+  </div>
+  <p style="color:var(--dim);font-size:11px;text-align:center;max-width:300px;line-height:1.9;margin-top:6px">Cast your line • Battle fish • Level to 100<br>7 worlds • Trophies • Inn • Food • Bait</p>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="gameScreen">
+  <!-- TOPBAR -->
+  <div id="topBar">
+    <span id="pname">ANGLER</span>
+    <div class="chip"><span class="lbl">LV</span> <span class="val" id="sLv">1</span></div>
+    <div class="chip"><span class="lbl">💰</span> <span class="val" id="sGold">0</span></div>
+    <div class="chip"><span class="lbl">⚡</span> <span class="val" id="sSta" style="color:var(--green)">1440</span></div>
+    <div class="chip"><span class="lbl">❤️</span> <span class="val" id="sHp" style="color:var(--red)">100</span></div>
+    <div class="chip"><span class="lbl">🌤</span> <span class="val" id="sWx">Clear</span></div>
+    <div id="xpWrap">
+      <div class="xp-bg"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+      <div class="xp-lbl" id="xpLbl">0/100 XP</div>
+    </div>
+  </div>
+  <!-- TABS -->
+  <div id="tabs">
+    <button class="tab on" onclick="goTab('fishing',this)">🎣 Fish</button>
+    <button class="tab" onclick="goTab('maps',this)">🗺️ Maps</button>
+    <button class="tab" onclick="goTab('storage',this)">📦 Storage</button>
+    <button class="tab" onclick="goTab('shop',this)">🏪 Shop</button>
+    <button class="tab" onclick="goTab('bait',this)">🪱 Bait</button>
+    <button class="tab" onclick="goTab('food',this)">🍱 Food</button>
+    <button class="tab" onclick="goTab('inn',this)">🏨 Inn</button>
+    <button class="tab" onclick="goTab('trophies',this)">🏆 Trophies</button>
+  </div>
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- FISHING -->
+    <div id="panel-fishing" class="panel on">
+      <div id="fishArea">
+        <div>
+          <div class="pond" id="pond">
+            <div class="water"></div>
+            <div id="idleDiv">
+              <div class="idle-icon">🐟</div>
+              <div class="idle-txt">Ready to cast?<br><span style="font-size:11px;color:var(--dim)">Check your bait &amp; equipment!</span></div>
+            </div>
+            <div id="cg">
+              <div class="cg-fish">
+                <div class="cg-sprite" id="cgSprite">🐟</div>
+                <div class="cg-name" id="cgName">Fish</div>
+                <div class="rb r-common" id="cgRarity">COMMON</div>
+              </div>
+              <div class="bar-wrap">
+                <div class="bar-lbl"><span>FISH HP</span><span id="cgHpTxt">100/100</span></div>
+                <div class="bar-bg" style="background:#1a0a0a"><div class="bar-fill hp-fill" id="cgHpBar" style="width:100%"></div></div>
+              </div>
+              <div class="bar-wrap">
+                <div class="bar-lbl"><span>CATCH RATE</span><span id="cgCrTxt">100%</span></div>
+                <div class="bar-bg" style="background:#0a1a0a"><div class="bar-fill cr-fill" id="cgCrBar" style="width:100%"></div></div>
+              </div>
+              <div class="dir-prompt" id="dirPrompt">Press: ↑</div>
+              <div class="dir-grid">
+                <div></div>
+                <button class="dir-btn" onclick="pd('N')">↑</button>
+                <div></div>
+                <button class="dir-btn" onclick="pd('W')">←</button>
+                <div style="background:var(--panel2);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px">🎣</div>
+                <button class="dir-btn" onclick="pd('E')">→</button>
+                <div></div>
+                <button class="dir-btn" onclick="pd('S')">↓</button>
+                <div></div>
+              </div>
+              <div class="combo" id="combo"></div>
+              <button class="btn btn-red" onclick="fleeFish()" style="width:100%;margin-top:8px;font-size:12px">⚡ FLEE</button>
+            </div>
+            <button class="btn btn-gold" id="castBtn" onclick="castLine()" style="margin-top:14px;width:90%">🎣 CAST LINE</button>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="side">
+            <h3>🎣 EQUIPMENT</h3>
+            <div class="eq-slot">
+              <div class="eq-lbl">🪄 ROD</div>
+              <div class="eq-val" id="eqRod">Starter Rod</div>
+            </div>
+            <div class="eq-slot">
+              <div class="eq-lbl">🧵 LINE</div>
+              <div class="eq-val" id="eqLine">Starter Line</div>
+              <div class="dur-bg"><div class="dur-fill" id="durFill" style="width:100%;background:var(--green)"></div></div>
+              <div style="font-size:10px;color:var(--dim);margin-top:2px" id="durTxt">100/100</div>
+            </div>
+            <div class="eq-slot">
+              <div class="eq-lbl">🪱 BAIT</div>
+              <div class="eq-val" id="eqBait">None</div>
+            </div>
+            <div class="eq-slot">
+              <div class="eq-lbl">🧪 POTION</div>
+              <div class="eq-val" id="eqPot">None</div>
+            </div>
+          </div>
+          <div class="side">
+            <h3>📜 LOG</h3>
+            <div class="log" id="log"></div>
+          </div>
+          <div class="side">
+            <h3>📊 SESSION</h3>
+            <div style="font-size:11px;line-height:2.2;color:var(--dim)">
+              Caught: <span id="ssCaught" style="color:var(--green)">0</span><br>
+              Escaped: <span id="ssEsc" style="color:var(--red)">0</span><br>
+              Gold: <span id="ssGold" style="color:var(--gold)">0</span><br>
+              Best: <span id="ssBest" style="color:var(--accent)">None</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAPS -->
+    <div id="panel-maps" class="panel">
+      <div class="map-banner" id="mapBanner">
+        <div class="map-big" id="mbArt">🏞️</div>
+        <div>
+          <div style="font-size:14px;font-weight:bold;color:var(--accent)" id="mbName">Riverside Plains</div>
+          <div style="font-size:11px;color:var(--dim);margin:3px 0" id="mbDesc">Your home waters.</div>
+          <div class="w-badge" id="mbWx">☀️ Clear</div>
+        </div>
+      </div>
+      <div class="map-grid" id="mapGrid"></div>
+    </div>
+
+    <!-- STORAGE -->
+    <div id="panel-storage" class="panel">
+      <div class="stor-hdr">
+        <div style="font-size:13px;font-weight:bold;color:var(--accent)">📦 STORAGE — <span id="storCount">0</span> items</div>
+        <button class="btn btn-gold btn-sm" onclick="sellAll()">💰 SELL ALL</button>
+      </div>
+      <div class="fish-grid" id="storGrid">
+        <div class="empty"><div class="empty-ico">🪣</div><p>Storage empty!</p></div>
+      </div>
+    </div>
+
+    <!-- SHOP -->
+    <div id="panel-shop" class="panel">
+      <div class="sec-title">🏪 ANGLER'S EMPORIUM</div>
+      <div class="shop-2col">
+        <div class="shop-sec"><h3>🪄 RODS</h3><div id="shopRods"></div></div>
+        <div class="shop-sec"><h3>🧵 LINES</h3><div id="shopLines"></div></div>
+        <div class="shop-sec"><h3>🧪 POTIONS</h3><div id="shopPots"></div></div>
+        <div class="shop-sec"><h3>🔧 SPECIAL</h3><div id="shopSpec"></div></div>
+      </div>
+    </div>
+
+    <!-- BAIT -->
+    <div id="panel-bait" class="panel">
+      <div class="sec-title">🪱 BAIT SHOP</div>
+      <div class="bait-eq">
+        <span style="font-size:32px" id="baitEqIco">❌</span>
+        <div>
+          <div style="font-size:10px;color:var(--dim)">EQUIPPED BAIT</div>
+          <div style="font-size:14px;font-weight:bold" id="baitEqName">None</div>
+          <div style="font-size:10px;color:var(--dim)" id="baitEqCount"></div>
+        </div>
+      </div>
+      <div class="bait-grid" id="baitGrid"></div>
+    </div>
+
+    <!-- FOOD -->
+    <div id="panel-food" class="panel">
+      <div class="sec-title">🍱 FOOD &amp; BEVERAGES</div>
+      <p style="font-size:11px;color:var(--dim);margin-bottom:12px">Restore Stamina &amp; HP. Limited stock per item!</p>
+      <div class="food-grid" id="foodGrid"></div>
+    </div>
+
+    <!-- INN -->
+    <div id="panel-inn" class="panel">
+      <div class="sec-title">🏨 INN — REST &amp; RECOVER</div>
+      <div id="innContent"></div>
+    </div>
+
+    <!-- TROPHIES -->
+    <div id="panel-trophies" class="panel">
+      <div class="sec-title">🏆 TROPHY ROOM</div>
+      <div class="trophy-grid" id="trophyGrid">
+        <div class="empty">No trophies yet!<br><span style="font-size:11px;color:var(--dim)">Catch large fish to earn them.</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="lvlModal">
+  <div class="modal" style="border-color:var(--gold)">
+    <h2 style="color:var(--gold)">⬆️ LEVEL UP!</h2>
+    <div class="lvl-num" id="lvlNum">2</div>
+    <p style="text-align:center;color:var(--dim);font-size:12px">New areas and fish unlocked!</p>
+    <div id="lvlUnlocks" style="color:var(--green);font-size:12px;text-align:center;margin:8px 0;line-height:2"></div>
+    <div class="modal-acts"><button class="btn btn-gold btn-sm" onclick="closeM('lvlModal')">🎉 AWESOME!</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="catchModal">
+  <div class="modal">
+    <h2 id="catchTitle">🎣 FISH CAUGHT!</h2>
+    <div style="font-size:72px;text-align:center;margin:8px 0;animation:float 2s ease-in-out infinite" id="catchIco">🐟</div>
+    <div style="font-size:14px;font-weight:bold;text-align:center;margin-bottom:6px" id="catchName"></div>
+    <div style="text-align:center;margin-bottom:10px" id="catchRarity"></div>
+    <div class="res-stats">
+      <div class="res-stat"><div class="res-lbl">XP</div><div class="res-val" id="catchXp" style="color:var(--accent)">+0</div></div>
+      <div class="res-stat"><div class="res-lbl">VALUE</div><div class="res-val" id="catchVal" style="color:var(--gold)">0G</div></div>
+      <div class="res-stat"><div class="res-lbl">SIZE</div><div class="res-val" id="catchSize">0cm</div></div>
+      <div class="res-stat"><div class="res-lbl">WEIGHT</div><div class="res-val" id="catchWt">0kg</div></div>
+    </div>
+    <div id="catchTrophy" style="display:none" class="trophy-earned"></div>
+    <div class="modal-acts">
+      <button class="btn btn-green btn-sm" onclick="storefish()">📦 STORE</button>
+      <button class="btn btn-gold btn-sm" onclick="sellNow()">💰 SELL NOW</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="innModal">
+  <div class="modal">
+    <h2 id="innMTitle">🏨 INN</h2>
+    <div style="font-size:52px;text-align:center;margin:6px 0" id="innMArt">🛏️</div>
+    <div style="font-size:11px;color:var(--dim);text-align:center;margin-bottom:10px" id="innMDesc"></div>
+    <div class="inn-stats">
+      <div class="inn-stat"><div class="inn-stat-lbl">COST</div><div class="inn-stat-val" id="innMCost" style="color:var(--gold)">-</div></div>
+      <div class="inn-stat"><div class="inn-stat-lbl">REST</div><div class="inn-stat-val" id="innMTime" style="color:var(--accent)">-</div></div>
+      <div class="inn-stat"><div class="inn-stat-lbl">RESTORE</div><div class="inn-stat-val" id="innMRestore" style="color:var(--green);font-size:11px">-</div></div>
+    </div>
+    <div id="innCheckIn">
+      <div style="font-size:11px;color:var(--dim);text-align:center;margin-bottom:10px">Current: ⚡<span id="innCurSta">-</span> ❤️<span id="innCurHp">-</span></div>
+      <div class="modal-acts">
+        <button class="btn btn-gold btn-sm" id="innCiBtn" onclick="checkIn()">🛏️ CHECK IN</button>
+        <button class="btn btn-sm" onclick="closeM('innModal')">Cancel</button>
+      </div>
+    </div>
+    <div id="innResting" style="display:none">
+      <div style="font-size:11px;color:var(--accent);text-align:center;margin-bottom:6px" id="innRestStat">Resting...</div>
+      <div class="rest-prog"><div class="rest-fill" id="restFill" style="width:0%"></div></div>
+      <div style="font-size:11px;color:var(--dim);text-align:center;margin-bottom:8px" id="restTimeLeft">-</div>
+      <div class="scream-box">
+        <div style="font-size:13px;font-weight:bold;color:var(--gold);margin-bottom:4px">😱 SCREAM TO WAKE UP!</div>
+        <div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.6">Scream as loud as you can into your phone!<br>Each successful scream cuts 5 hours rest.<br>Costs 500G per attempt.</div>
+        <button class="btn btn-gold btn-sm" id="screamBtn" onclick="startScream()" style="width:100%">🎤 SCREAM! (500G)</button>
+        <div id="screamMeter" style="display:none;margin-top:8px">
+          <div style="font-size:10px;color:var(--dim);margin-bottom:3px">VOLUME:</div>
+          <div class="scream-meter"><div class="scream-fill" id="screamFill" style="width:0%"></div></div>
+          <div style="font-size:11px;text-align:center;margin-top:4px;color:var(--dim)" id="screamFb">Scream!</div>
+        </div>
+      </div>
+      <div class="modal-acts" style="margin-top:10px">
+        <button class="btn btn-green btn-sm" onclick="checkOut()">✅ WAKE UP EARLY</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="notifs"></div>
+<div id="saveIco">💾 Saved!</div>
+
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const MAPS=[
+  {id:'riverside', name:'Riverside Plains',  art:'🏞️', desc:'Calm waters for beginners.',           req:1,  wx:['☀️ Clear','🌧️ Rainy','🌤️ Cloudy']},
+  {id:'mountain',  name:'Mountain Stream',   art:'⛰️', desc:'Cold fast waters. Rare fish lurk.',    req:10, wx:['❄️ Snowy','☀️ Clear','🌤️ Cloudy']},
+  {id:'swamp',     name:'Misty Swamp',        art:'🌿', desc:'Dark murky waters hide monsters.',     req:20, wx:['🌫️ Foggy','🌧️ Rainy','☀️ Clear']},
+  {id:'forest_lake',name:'Enchanted Lake',   art:'🌲', desc:'Ancient magical lake.',                req:35, wx:['✨ Magical','☀️ Clear','🌧️ Rainy']},
+  {id:'deep_sea',  name:'Deep Ocean',         art:'🌊', desc:'The vast ocean hides legends.',        req:50, wx:['⛈️ Storm','☀️ Clear','🌀 Hurricane']},
+  {id:'volcano',   name:'Volcanic Shore',     art:'🌋', desc:'Extreme heat. Only strong fish live.', req:70, wx:['🔥 Eruption','☀️ Clear','🌋 Ash Storm']},
+  {id:'celestial', name:'Celestial Abyss',    art:'🌌', desc:'Beyond mortal realm. Master fish.',    req:90, wx:['🌌 Cosmic','⭐ Starfall','🌑 Eclipse']}
+];
+
+const FISH=[
+  // RIVERSIDE
+  {id:'bluegill',     n:'Bluegill',        ico:'🐟',map:'riverside',  r:'common',  hp:30,  xp:8,   val:5,   wx:null,          lv:1,  sz:[8,15],   wt:[0.1,0.3]},
+  {id:'carp',         n:'Carp',            ico:'🐠',map:'riverside',  r:'common',  hp:50,  xp:12,  val:8,   wx:null,          lv:1,  sz:[20,40],  wt:[1,4]},
+  {id:'catfish',      n:'Catfish',         ico:'🦈',map:'riverside',  r:'common',  hp:70,  xp:18,  val:12,  wx:'🌧️ Rainy',   lv:1,  sz:[25,50],  wt:[2,6]},
+  {id:'sunfish',      n:'Sunfish',         ico:'🐡',map:'riverside',  r:'common',  hp:25,  xp:6,   val:4,   wx:null,          lv:1,  sz:[6,12],   wt:[0.05,0.2]},
+  {id:'trout',        n:'Trout',           ico:'🐟',map:'riverside',  r:'uncommon',hp:60,  xp:25,  val:20,  wx:null,          lv:2,  sz:[20,35],  wt:[0.5,2]},
+  {id:'perch',        n:'Perch',           ico:'🐠',map:'riverside',  r:'uncommon',hp:55,  xp:22,  val:18,  wx:'☀️ Clear',   lv:3,  sz:[15,28],  wt:[0.3,1.2]},
+  {id:'bass',         n:'Bass',            ico:'🐟',map:'riverside',  r:'epic',    hp:100, xp:50,  val:45,  wx:null,          lv:5,  sz:[30,55],  wt:[1.5,5]},
+  {id:'pike',         n:'Pike',            ico:'🦈',map:'riverside',  r:'rare',    hp:130, xp:80,  val:80,  wx:'🌧️ Rainy',   lv:7,  sz:[40,80],  wt:[3,10]},
+  // MOUNTAIN
+  {id:'rainbow_trout',n:'Rainbow Trout',   ico:'🌈',map:'mountain',   r:'uncommon',hp:75,  xp:35,  val:30,  wx:'☀️ Clear',   lv:10, sz:[25,45],  wt:[0.8,3]},
+  {id:'brook_trout',  n:'Brook Trout',     ico:'🐟',map:'mountain',   r:'uncommon',hp:65,  xp:30,  val:25,  wx:null,          lv:10, sz:[20,40],  wt:[0.5,2]},
+  {id:'char',         n:'Arctic Char',     ico:'🐠',map:'mountain',   r:'epic',    hp:110, xp:60,  val:55,  wx:'❄️ Snowy',   lv:12, sz:[30,55],  wt:[1,5]},
+  {id:'whitefish',    n:'Whitefish',       ico:'🐡',map:'mountain',   r:'common',  hp:45,  xp:20,  val:15,  wx:null,          lv:10, sz:[20,35],  wt:[0.5,2]},
+  {id:'goldenfish',   n:'Goldenfish',      ico:'✨',map:'mountain',   r:'rare',    hp:150, xp:100, val:120, wx:'☀️ Clear',   lv:15, sz:[35,60],  wt:[2,7]},
+  {id:'crystal_salmon',n:'Crystal Salmon', ico:'💎',map:'mountain',   r:'legend',  hp:220, xp:200, val:350, wx:'❄️ Snowy',   lv:18, sz:[50,90],  wt:[5,15]},
+  {id:'snow_carp',    n:'Snow Carp',       ico:'❄️',map:'mountain',   r:'epic',    hp:140, xp:90,  val:100, wx:'❄️ Snowy',   lv:14, sz:[35,65],  wt:[3,10]},
+  // SWAMP
+  {id:'mudfish',      n:'Mudfish',         ico:'🐟',map:'swamp',      r:'common',  hp:55,  xp:22,  val:16,  wx:null,          lv:20, sz:[15,30],  wt:[0.3,1]},
+  {id:'snapper',      n:'Snapper',         ico:'🦈',map:'swamp',      r:'uncommon',hp:90,  xp:45,  val:40,  wx:'🌫️ Foggy',  lv:22, sz:[25,45],  wt:[1,4]},
+  {id:'alligator_gar',n:'Alligator Gar',   ico:'🐊',map:'swamp',      r:'epic',    hp:180, xp:120, val:150, wx:'🌧️ Rainy',   lv:25, sz:[60,120], wt:[10,30]},
+  {id:'venom_eel',    n:'Venom Eel',       ico:'🐍',map:'swamp',      r:'rare',    hp:160, xp:110, val:140, wx:'🌫️ Foggy',  lv:28, sz:[50,100], wt:[2,8]},
+  {id:'bog_lurker',   n:'Bog Lurker',      ico:'👁️',map:'swamp',      r:'epic',    hp:200, xp:140, val:180, wx:'🌫️ Foggy',  lv:30, sz:[40,80],  wt:[5,15]},
+  {id:'shadow_carp',  n:'Shadow Carp',     ico:'🌑',map:'swamp',      r:'rare',    hp:175, xp:125, val:160, wx:null,          lv:26, sz:[45,75],  wt:[4,12]},
+  {id:'cursed_pike',  n:'Cursed Pike',     ico:'💀',map:'swamp',      r:'legend',  hp:280, xp:250, val:400, wx:'🌧️ Rainy',   lv:32, sz:[70,120], wt:[8,20]},
+  // FOREST LAKE
+  {id:'moonfish',     n:'Moonfish',        ico:'🌙',map:'forest_lake',r:'uncommon',hp:95,  xp:55,  val:50,  wx:null,          lv:35, sz:[20,40],  wt:[0.5,2]},
+  {id:'fairy_trout',  n:'Fairy Trout',     ico:'🧚',map:'forest_lake',r:'rare',    hp:180, xp:140, val:200, wx:'✨ Magical',  lv:40, sz:[35,60],  wt:[1,4]},
+  {id:'crystal_bass', n:'Crystal Bass',    ico:'🔮',map:'forest_lake',r:'epic',    hp:170, xp:120, val:160, wx:null,          lv:37, sz:[30,55],  wt:[2,6]},
+  {id:'arcane_eel',   n:'Arcane Eel',      ico:'🌀',map:'forest_lake',r:'rare',    hp:200, xp:160, val:250, wx:'✨ Magical',  lv:42, sz:[60,110], wt:[3,9]},
+  {id:'phantom_carp', n:'Phantom Carp',    ico:'👻',map:'forest_lake',r:'legend',  hp:300, xp:280, val:500, wx:null,          lv:45, sz:[50,90],  wt:[5,15]},
+  {id:'void_fish',    n:'Void Fish',       ico:'🕳️',map:'forest_lake',r:'legend',  hp:320, xp:300, val:550, wx:null,          lv:48, sz:[45,85],  wt:[3,10]},
+  // DEEP SEA
+  {id:'tuna',         n:'Bluefin Tuna',    ico:'🐋',map:'deep_sea',   r:'uncommon',hp:130, xp:80,  val:100, wx:null,          lv:50, sz:[80,180], wt:[20,80]},
+  {id:'swordfish',    n:'Swordfish',       ico:'⚔️',map:'deep_sea',   r:'epic',    hp:250, xp:180, val:280, wx:'⛈️ Storm',   lv:55, sz:[100,200],wt:[30,100]},
+  {id:'marlin',       n:'Marlin',          ico:'🌊',map:'deep_sea',   r:'rare',    hp:300, xp:220, val:380, wx:'☀️ Clear',   lv:57, sz:[120,230],wt:[40,120]},
+  {id:'mako_shark',   n:'Mako Shark',      ico:'🦈',map:'deep_sea',   r:'epic',    hp:280, xp:200, val:320, wx:null,          lv:55, sz:[150,280],wt:[60,150]},
+  {id:'leviathan',    n:'Leviathan',       ico:'🐉',map:'deep_sea',   r:'legend',  hp:500, xp:500, val:900, wx:'⛈️ Storm',   lv:62, sz:[200,500],wt:[200,600]},
+  {id:'neptune_bass', n:'Neptune Bass',    ico:'🔱',map:'deep_sea',   r:'rare',    hp:350, xp:260, val:500, wx:'☀️ Clear',   lv:58, sz:[100,180],wt:[30,80]},
+  // VOLCANO
+  {id:'lava_eel',     n:'Lava Eel',        ico:'🔥',map:'volcano',    r:'uncommon',hp:160, xp:100, val:120, wx:'🔥 Eruption', lv:70, sz:[60,110], wt:[3,8]},
+  {id:'magma_carp',   n:'Magma Carp',      ico:'🌋',map:'volcano',    r:'epic',    hp:300, xp:200, val:300, wx:null,          lv:72, sz:[40,80],  wt:[5,15]},
+  {id:'inferno_bass', n:'Inferno Bass',    ico:'🌡️',map:'volcano',    r:'epic',    hp:320, xp:220, val:350, wx:'🔥 Eruption', lv:74, sz:[50,90],  wt:[6,18]},
+  {id:'molten_pike',  n:'Molten Pike',     ico:'💢',map:'volcano',    r:'rare',    hp:380, xp:280, val:550, wx:'🌋 Ash Storm',lv:77, sz:[80,150], wt:[15,40]},
+  {id:'phoenixfish',  n:'Phoenixfish',     ico:'🦅',map:'volcano',    r:'legend',  hp:550, xp:550, val:1200,wx:'🔥 Eruption', lv:80, sz:[100,180],wt:[20,60]},
+  {id:'dragon_eel',   n:'Dragon Eel',      ico:'🐲',map:'volcano',    r:'legend',  hp:600, xp:600, val:1300,wx:'🌋 Ash Storm',lv:83, sz:[200,400],wt:[80,200]},
+  // CELESTIAL
+  {id:'galaxy_fish',  n:'Galaxy Fish',     ico:'🌌',map:'celestial',  r:'epic',    hp:400, xp:350, val:800, wx:'🌌 Cosmic',  lv:90, sz:[50,100], wt:[10,30]},
+  {id:'nebula_bass',  n:'Nebula Bass',     ico:'🌠',map:'celestial',  r:'rare',    hp:450, xp:400, val:950, wx:'⭐ Starfall', lv:92, sz:[60,120], wt:[15,40]},
+  {id:'cosmic_carp',  n:'Cosmic Carp',     ico:'🌀',map:'celestial',  r:'legend',  hp:700, xp:700, val:1800,wx:null,          lv:93, sz:[80,150], wt:[25,70]},
+  {id:'astral_eel',   n:'Astral Eel',      ico:'🌟',map:'celestial',  r:'legend',  hp:750, xp:800, val:2200,wx:'🌌 Cosmic',  lv:95, sz:[150,300],wt:[40,120]},
+  {id:'void_leviathan',n:'Void Leviathan', ico:'🕳️',map:'celestial',  r:'master',  hp:1200,xp:1500,val:5000,wx:'🌑 Eclipse', lv:100,sz:[500,1000],wt:[500,2000]},
+  {id:'supernova_shark',n:'Supernova Shark',ico:'💥',map:'celestial', r:'master',  hp:1000,xp:1200,val:4000,wx:'🌌 Cosmic',  lv:100,sz:[300,600],wt:[200,800]},
+  {id:'celestial_god',n:'Celestial God Fish',ico:'🌞',map:'celestial',r:'master',  hp:2000,xp:3000,val:10000,wx:'🌑 Eclipse',lv:100,sz:[1000,2000],wt:[1000,5000]}
+];
+
+const RARITY_PROB={common:.45,uncommon:.25,epic:.15,rare:.10,legend:.04,master:.01};
+
+const RODS=[
+  {id:'starter',    n:'Starter Rod',      ico:'🪣',tier:'common',   price:0,    dmg:0,  luck:0},
+  {id:'oak',        n:'Oak Rod',          ico:'🪵',tier:'common',   price:80,   dmg:5,  luck:0},
+  {id:'iron',       n:'Iron Rod',         ico:'⚙️',tier:'uncommon', price:250,  dmg:10, luck:2},
+  {id:'silver',     n:'Silver Rod',       ico:'🥈',tier:'uncommon', price:600,  dmg:15, luck:5},
+  {id:'crystal',    n:'Crystal Rod',      ico:'💎',tier:'epic',     price:1800, dmg:25, luck:10},
+  {id:'dragonsteel',n:'Dragonsteel Rod',  ico:'⚔️',tier:'rare',     price:5000, dmg:35, luck:15},
+  {id:'astral',     n:'Astral Rod',       ico:'⭐',tier:'legend',   price:15000,dmg:50, luck:25},
+  {id:'mythic',     n:'MYTHIC ROD',       ico:'🌟',tier:'mythic',   price:50000,dmg:80, luck:40}
+];
+
+const LINES=[
+  {id:'starter',  n:'Starter Line',   ico:'🧵',tier:'common',   price:0,    dur:100,  brk:.08},
+  {id:'cotton',   n:'Cotton Line',    ico:'🪡',tier:'common',   price:40,   dur:150,  brk:.06},
+  {id:'nylon',    n:'Braided Nylon',  ico:'🧶',tier:'uncommon', price:120,  dur:250,  brk:.04},
+  {id:'steel',    n:'Steel Line',     ico:'🔗',tier:'uncommon', price:400,  dur:400,  brk:.02},
+  {id:'titanium', n:'Titanium Line',  ico:'⚡',tier:'epic',     price:1200, dur:700,  brk:.01},
+  {id:'dragon',   n:'Dragon Silk',    ico:'🐉',tier:'rare',     price:4000, dur:1200, brk:.005},
+  {id:'void_line',n:'Void Thread',    ico:'🕳️',tier:'legend',   price:12000,dur:2500, brk:0},
+  {id:'mythic_l', n:'MYTHIC LINE',    ico:'🌟',tier:'mythic',   price:40000,dur:9999, brk:0}
+];
+
+const POTIONS=[
+  {id:'luck1',n:'Minor Luck',      ico:'🍶',price:80,   eff:'luck',pw:1,dur:5},
+  {id:'luck2',n:'Major Luck',      ico:'🧪',price:300,  eff:'luck',pw:2,dur:8},
+  {id:'epic1',n:'Epic Lure',       ico:'💜',price:900,  eff:'luck',pw:3,dur:5},
+  {id:'rare1',n:'Rare Surge',      ico:'💙',price:2000, eff:'luck',pw:4,dur:5},
+  {id:'leg1', n:'Legend Elixir',   ico:'🧡',price:6000, eff:'luck',pw:5,dur:3},
+  {id:'mast1',n:'Master Draught',  ico:'❤️',price:20000,eff:'luck',pw:6,dur:2},
+  {id:'str1', n:'Angler Strength', ico:'💪',price:150,  eff:'dmg', pw:1.5,dur:10},
+  {id:'spd1', n:'Quick Reflex',    ico:'⚡',price:200,  eff:'spd', pw:.5,dur:8}
+];
+
+const BAITS=[
+  {id:'earthworm', n:'Earthworm',     ico:'🪱',price:10,  max:20,lv:1,  fish:['bluegill','carp','catfish','perch','trout','mudfish']},
+  {id:'maggot',    n:'Maggots',       ico:'🐛',price:15,  max:20,lv:1,  fish:['catfish','carp','mudfish','alligator_gar']},
+  {id:'cricket',   n:'Cricket',       ico:'🦗',price:20,  max:15,lv:3,  fish:['sunfish','bass','perch','bluegill']},
+  {id:'shrimp',    n:'Shrimp',        ico:'🦐',price:40,  max:15,lv:5,  fish:['pike','snapper','rainbow_trout','brook_trout']},
+  {id:'minnow',    n:'Live Minnow',   ico:'🐟',price:60,  max:10,lv:8,  fish:['bass','pike','venom_eel','shadow_carp','cursed_pike']},
+  {id:'firefly',   n:'Firefly',       ico:'✨',price:120, max:10,lv:15, fish:['moonfish','fairy_trout','crystal_bass','goldenfish']},
+  {id:'deep_lure', n:'Deep Sea Lure', ico:'🪝',price:300, max:8, lv:30, fish:['tuna','swordfish','marlin','neptune_bass']},
+  {id:'magma_worm',n:'Magma Worm',    ico:'🔥',price:500, max:5, lv:50, fish:['lava_eel','magma_carp','inferno_bass','molten_pike']},
+  {id:'void_cryst',n:'Void Crystal',  ico:'💎',price:2000,max:3, lv:70, fish:['galaxy_fish','nebula_bass','cosmic_carp','astral_eel']},
+  {id:'star_dust', n:'Star Dust',     ico:'🌟',price:5000,max:2, lv:90, fish:['void_leviathan','supernova_shark','celestial_god']}
+];
+
+const FOODS=[
+  {id:'cracker',   n:'Crackers',      ico:'🍘',price:20,  max:20,sta:1, hp:0, snd:'crunch'},
+  {id:'green_tea', n:'Green Tea',     ico:'🍵',price:30,  max:20,sta:5, hp:0, snd:'blow'},
+  {id:'rice_ball', n:'Rice Ball',     ico:'🍙',price:60,  max:15,sta:6, hp:3, snd:'rice'},
+  {id:'black_tea', n:'Black Tea',     ico:'☕',price:50,  max:15,sta:8, hp:2, snd:'blow'},
+  {id:'coconut',   n:'Coconut Water', ico:'🥥',price:80,  max:12,sta:10,hp:5, snd:'slurp'},
+  {id:'miso_soup', n:'Miso Soup',     ico:'🍲',price:90,  max:12,sta:12,hp:8, snd:'slurp'},
+  {id:'onigiri',   n:'Salmon Onigiri',ico:'🍣',price:100, max:12,sta:10,hp:6, snd:'rice'},
+  {id:'sandwich',  n:'Sandwich',      ico:'🥪',price:150, max:10,sta:15,hp:8, snd:'crunch'},
+  {id:'energy',    n:'Energy Drink',  ico:'🥤',price:120, max:10,sta:20,hp:0, snd:'fizz'},
+  {id:'apple',     n:'Apple',         ico:'🍎',price:180, max:8, sta:2, hp:10,snd:'crunch'},
+  {id:'ramen',     n:'Ramen',         ico:'🍜',price:200, max:8, sta:22,hp:12,snd:'slurp'},
+  {id:'sushi',     n:'Sushi Set',     ico:'🍱',price:350, max:6, sta:30,hp:15,snd:'rice'},
+  {id:'grilled',   n:'Grilled Fish',  ico:'🐟',price:250, max:8, sta:18,hp:20,snd:'chew'},
+  {id:'feast',     n:"Angler's Feast",ico:'🎉',price:800, max:3, sta:50,hp:40,snd:'chew'}
+];
+
+const INNS={
+  riverside:   {n:'Muddy Boot Inn',      art:'🏠',price:500,  sta:50, hp:50, hrs:8, desc:'Cozy roadside inn. Basic but warm.'},
+  mountain:    {n:'Frostpeak Lodge',     art:'🏔️',price:900,  sta:55, hp:55, hrs:7, desc:'Warm cabin by the mountain stream.'},
+  swamp:       {n:'Bogwater Tavern',     art:'🌿',price:700,  sta:52, hp:52, hrs:8, desc:'Shady but surprisingly cozy.'},
+  forest_lake: {n:'Moonwhisper Inn',     art:'🌲',price:1500, sta:60, hp:60, hrs:6, desc:'Magical inn by the enchanted lake.'},
+  deep_sea:    {n:'Coral Rest House',    art:'🪸',price:2500, sta:70, hp:70, hrs:6, desc:'Nautical luxury with ocean views.'},
+  volcano:     {n:'Ember Hearth Hotel',  art:'🌋',price:4000, sta:80, hp:80, hrs:5, desc:'Premium hot spring resort.'},
+  celestial:   {n:'Stardream Sanctum',   art:'🌌',price:8000, sta:100,hp:100,hrs:4, desc:'The ultimate cosmic spa experience.'}
+};
+
+// ══════════════════════════════════════════
+// GAME STATE
+// ══════════════════════════════════════════
+const MAX_STA=1440,MAX_HP=100,STA_COST=10;
+const SAVE_KEY='rucoy_fm_v2';
+
+let G={
+  name:'Angler',lv:1,xp:0,gold:50,
+  map:'riverside',wx:'☀️ Clear',
+  sta:MAX_STA,hp:MAX_HP,lastOnline:Date.now(),
+  rod:'starter',line:'starter',potion:null,potCharges:0,
+  lineDur:100,
+  baitOwned:{},equippedBait:null,
+  foodOwned:{},
+  storage:[],trophies:[],fishCaught:{},
+  isResting:false,restStart:0,restDuration:0,restMapId:'riverside',
+  ssCaught:0,ssEsc:0,ssGold:0,ssBest:null,
+};
+
+// Catch session
+let CS={active:false,fish:null,hp:0,maxHp:0,cr:100,seq:[],idx:0,fails:0,combo:0,timer:null};
+let pendingCatch=null;
+let wxTimer=null,restTimer=null,screamStream=null,screamInterval=null;
+
+// ══════════════════════════════════════════
+// AUDIO
+// ══════════════════════════════════════════
+let AC=null;
+function ac(){
+  if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)();
+  if(AC.state==='suspended') AC.resume();
+  return AC;
+}
+function tone(f,t,d,v,dl=0){
+  try{
+    const c=ac(),o=c.createOscillator(),g=c.createGain();
+    o.connect(g);g.connect(c.destination);
+    o.type=t;o.frequency.value=f;
+    const s=c.currentTime+dl;
+    g.gain.setValueAtTime(0,s);g.gain.linearRampToValueAtTime(v,s+.02);
+    g.gain.linearRampToValueAtTime(0,s+d);
+    o.start(s);o.stop(s+d+.05);
+  }catch(e){}
+}
+function noise(d,v,ff=1000,dl=0){
+  try{
+    const c=ac(),n=c.sampleRate*d,b=c.createBuffer(1,n,c.sampleRate),dt=b.getChannelData(0);
+    for(let i=0;i<n;i++) dt[i]=Math.random()*2-1;
+    const s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();
+    s.buffer=b;f.type='lowpass';f.frequency.value=ff;
+    s.connect(f);f.connect(g);g.connect(c.destination);
+    const st=c.currentTime+dl;
+    g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(v,st+.1);
+    g.gain.linearRampToValueAtTime(0,st+d);
+    s.start(st);s.stop(st+d+.1);
+  }catch(e){}
+}
+const SFX={
+  cast:()=>{noise(.3,.12,2000);tone(200,'sine',.4,.15,.25)},
+  ok:()=>{tone(660,'square',.08,.12);tone(880,'square',.08,.1,.08)},
+  no:()=>{tone(180,'sawtooth',.15,.18);noise(.1,.08,400)},
+  escape:()=>{tone(440,'sawtooth',.15,.2);tone(220,'sawtooth',.2,.15,.15)},
+  linesnap:()=>{noise(.1,.3,600);tone(150,'sawtooth',.3,.2,.05)},
+  buy:()=>{tone(800,'sine',.08,.15);tone(1000,'sine',.08,.12,.09)},
+  levelup:()=>{[523,659,784,1047,1319].forEach((f,i)=>tone(f,'square',.2,.15,i*.1));noise(.3,.05,5000,.4)},
+  vending:()=>{tone(1200,'square',.05,.2);tone(600,'square',.07,.15,.15);noise(.2,.18,1200,.35);tone(200,'sine',.3,.25,.4)},
+  innSleep:()=>{[523,659,784,523].forEach((f,i)=>tone(f,'sine',.8,.06,i*.4));noise(1.5,.02,200,.5)},
+  innWake:()=>{[784,1047,1319,1568].forEach((f,i)=>tone(f,'sine',.3,.1,i*.12))},
+  scream:()=>{[1568,1319,1047,784,523].forEach((f,i)=>tone(f,'square',.15,.2,i*.07));noise(.3,.15,2000,.4)},
+  catch:(r)=>{
+    const ns={common:[440,550,660],uncommon:[440,550,660,880],epic:[330,440,660,880],rare:[264,440,660,880,1100],legend:[220,330,550,770,1100,1320],master:[110,220,440,660,880,1100,1320,1568]};
+    (ns[r]||ns.common).forEach((f,i)=>tone(f,'sine',.25,.15,i*.07));
+    if(r==='legend'||r==='master') noise(.5,.1,3000,.1);
+  },
+  food:{
+    crunch:()=>{for(let i=0;i<8;i++){noise(.04,.12,4000+Math.random()*2000,i*.035);tone(800+Math.random()*300,'square',.03,.06,i*.035)}},
+    blow:()=>{noise(.6,.07,400);tone(150,'sine',.5,.05,.1);noise(.3,.05,300,.4)},
+    rice:()=>{for(let i=0;i<5;i++){noise(.06,.06,2000,i*.07);tone(300,'sine',.05,.04,i*.07)}},
+    slurp:()=>{noise(.4,.1,600);tone(200,'sine',.3,.1);noise(.15,.07,1200,.3)},
+    fizz:()=>{tone(900,'square',.06,.25);noise(.5,.08,3000,.07);for(let i=0;i<15;i++)tone(2000+Math.random()*1000,'sine',.04,.03,.07+i*.02)},
+    chew:()=>{for(let i=0;i<5;i++){noise(.06,.06,2000,i*.07);tone(300,'sine',.05,.04,i*.07)}},
+  }
+};
+
+// Weather/map ambient
+let wxAmbInt=null,mapAmbInt=null,innAmbInt=null;
+function stopAmb(ref){if(ref){clearInterval(ref);}}
+function wxAmb(w){
+  stopAmb(wxAmbInt);
+  function play(){
+    try{
+      if(w.includes('Clear')){noise(3,.025,300);[800,1000,1200].forEach((f,i)=>{if(Math.random()<.5)tone(f,'sine',.12,.05,i*.6+Math.random()*.3)})}
+      else if(w.includes('Rainy')){for(let i=0;i<5;i++)noise(2+Math.random()*.5,.05,400+Math.random()*200,i*.3);if(Math.random()<.3){noise(.5,.2,80,1.5);tone(60,'sine',1.5,.15,1.5)}}
+      else if(w.includes('Snowy')){noise(3,.03,150);tone(100,'sine',2,.03);tone(70,'sine',2.5,.025,.5)}
+      else if(w.includes('Foggy')){noise(2,.025,200);tone(300,'sine',.1,.05,.5+Math.random()*2)}
+      else if(w.includes('Magical')||w.includes('✨')){[1047,1319,1568,2093].forEach((f,i)=>{if(Math.random()<.6)tone(f,'sine',.4,.04,i*.5+Math.random()*.5)})}
+      else if(w.includes('Storm')){noise(2,.07,300);tone(60,'sine',2,.1);if(Math.random()<.4){noise(.6,.2,80,.7);tone(50,'sine',1.5,.18,.7)}}
+      else if(w.includes('Hurricane')){noise(3,.1,100);tone(60,'sawtooth',2,.08)}
+      else if(w.includes('Eruption')||w.includes('🔥')){for(let i=0;i<4;i++)noise(.3,.06,600+Math.random()*300,i*.4);tone(80,'sine',2,.07)}
+      else if(w.includes('Ash')){noise(3,.04,100);tone(40,'sine',3,.1)}
+      else if(w.includes('Cosmic')||w.includes('🌌')){tone(60,'sine',3,.05);[2093,1760].forEach((f,i)=>{if(Math.random()<.4)tone(f,'sine',.6,.025,i*.8)})}
+      else if(w.includes('Starfall')||w.includes('⭐')){for(let i=0;i<5;i++){if(Math.random()<.7)tone(1000+Math.random()*2000,'sine',.15,.04,i*.35+Math.random()*.2)}}
+      else if(w.includes('Eclipse')||w.includes('🌑')){tone(40,'sine',4,.08);tone(60,'sine',4,.05,.3);noise(3,.015,100)}
+      else{noise(2,.025,400)}
+    }catch(e){}
+  }
+  play();wxAmbInt=setInterval(play,4500);
+}
+const MAP_AMB={
+  riverside:()=>{noise(3,.035,500);tone(300,'sine',2,.025)},
+  mountain:()=>{noise(3,.025,200);[800,1000].forEach((f,i)=>{if(Math.random()<.5)tone(f,'sine',.15,.04,i*.7)})},
+  swamp:()=>{noise(3,.035,150);tone(80,'sine',3,.05);if(Math.random()<.4)tone(350,'sine',.2,.04,1+Math.random()*2)},
+  forest_lake:()=>{noise(2,.025,400);[900,1100].forEach((f,i)=>{if(Math.random()<.5)tone(f,'sine',.2,.04,i*.5+Math.random()*.5)})},
+  deep_sea:()=>{noise(3,.04,200);tone(60,'sine',3,.07);tone(80,'sine',2.5,.04,.8)},
+  volcano:()=>{for(let i=0;i<3;i++)noise(.4,.04,700+Math.random()*200,i*.5);tone(80,'sine',2,.06)},
+  celestial:()=>{tone(40,'sine',4,.07);[2093,1760,2349].forEach((f,i)=>{if(Math.random()<.4)tone(f,'sine',.5,.025,i*.6+Math.random()*.5)})}
+};
+function mapAmb(id){
+  stopAmb(mapAmbInt);
+  const fn=MAP_AMB[id];
+  if(!fn)return;
+  fn();mapAmbInt=setInterval(fn,5500);
+}
+const INN_AMB={
+  riverside:()=>{tone(440,'sine',1,.04);tone(330,'sine',1.2,.03,.5);noise(2,.012,300)},
+  mountain:()=>{tone(300,'sine',2,.04);noise(1.5,.018,200);tone(200,'sine',1.5,.03,.8)},
+  swamp:()=>{tone(200,'sine',2,.04);noise(2,.02,150)},
+  forest_lake:()=>{[523,659,784].forEach((f,i)=>tone(f,'sine',.8,.035,i*.5));noise(2,.012,400)},
+  deep_sea:()=>{noise(2,.025,300);tone(80,'sine',2,.04);tone(1047,'sine',.5,.025,.8)},
+  volcano:()=>{noise(1.5,.018,500);tone(200,'sine',2,.04)},
+  celestial:()=>{[1047,1319,1568,2093].forEach((f,i)=>{if(Math.random()<.6)tone(f,'sine',1,.025,i*.4+Math.random()*.3)});noise(2,.008,5000)}
+};
+function innAmb(id){stopAmb(innAmbInt);const fn=INN_AMB[id]||INN_AMB.riverside;fn();innAmbInt=setInterval(fn,4500);}
+function stopInnAmb(){stopAmb(innAmbInt);innAmbInt=null;}
+
+// ══════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════
+function rnd(a,b){return Math.floor(a+Math.random()*(b-a))}
+function rndF(a,b){return Math.round((a+Math.random()*(b-a))*10)/10}
+function xpNeeded(lv){return Math.floor(100*Math.pow(lv,1.6))}
+function getRod(){return RODS.find(r=>r.id===G.rod)}
+function getLine(){return LINES.find(l=>l.id===G.line)}
+function getFish(id){return FISH.find(f=>f.id===id)}
+function getBait(id){return BAITS.find(b=>b.id===id)}
+function getFood(id){return FOODS.find(f=>f.id===id)}
+function getInn(id){return INNS[id]||INNS.riverside}
+function rarityColor(r){return{common:'var(--common)',uncommon:'var(--uncommon)',epic:'var(--epic)',rare:'var(--rare)',legend:'var(--legend)',master:'var(--master)'}[r]||'var(--text)'}
+function tierClass(t){return{common:'tc',uncommon:'tu',epic:'te',rare:'tr',legend:'tl',master:'tm',mythic:'tm'}[t]||'tc'}
+function notify(msg,type=''){
+  const d=document.createElement('div');
+  d.className='notif n'+type.charAt(0);d.textContent=msg;
+  const c=document.getElementById('notifs');
+  c.insertBefore(d,c.firstChild);
+  setTimeout(()=>{if(d.parentNode)d.parentNode.removeChild(d)},3200);
+}
+function log(msg,cls=''){
+  const e=document.getElementById('log');
+  const d=document.createElement('div');
+  d.className='log-e log-'+(cls||'i');d.textContent='> '+msg;
+  e.insertBefore(d,e.firstChild);
+  if(e.children.length>50)e.removeChild(e.lastChild);
+}
+function closeM(id){document.getElementById(id).classList.remove('on')}
+function el(id){return document.getElementById(id)}
+
+// ══════════════════════════════════════════
+// TOP BAR
+// ══════════════════════════════════════════
+function updateTop(){
+  el('sLv').textContent=G.lv;
+  el('sGold').textContent=G.gold.toLocaleString();
+  const sta=el('sSta');sta.textContent=G.sta;
+  sta.style.color=G.sta>720?'var(--green)':G.sta>240?'var(--gold)':'var(--red)';
+  const hp=el('sHp');hp.textContent=G.hp;
+  hp.style.color=G.hp>60?'var(--green)':G.hp>30?'var(--gold)':'var(--red)';
+  const m=MAPS.find(x=>x.id===G.map);
+  el('sWx').textContent=G.wx.split(' ')[0];
+  const need=xpNeeded(G.lv);
+  const pct=G.lv>=100?100:Math.min(100,(G.xp/need)*100);
+  el('xpFill').style.width=pct+'%';
+  el('xpLbl').textContent=G.xp+'/'+need+' XP';
+}
+
+// ══════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════
+function goTab(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  el('panel-'+id).classList.add('on');
+  if(btn) btn.classList.add('on');
+  if(id==='maps') renderMaps();
+  if(id==='storage') renderStorage();
+  if(id==='shop') renderShop();
+  if(id==='bait') renderBait();
+  if(id==='food') renderFood();
+  if(id==='inn') renderInn();
+  if(id==='trophies') renderTrophies();
+}
+
+// ══════════════════════════════════════════
+// WEATHER
+// ══════════════════════════════════════════
+function setWeather(){
+  const m=MAPS.find(x=>x.id===G.map);
+  if(!m)return;
+  G.wx=m.wx[Math.floor(Math.random()*m.wx.length)];
+  updateTop();updateMapBanner();
+  log('Weather: '+G.wx,'i');
+  wxAmb(G.wx);
+}
+
+// ══════════════════════════════════════════
+// MAPS
+// ══════════════════════════════════════════
+function updateMapBanner(){
+  const m=MAPS.find(x=>x.id===G.map);if(!m)return;
+  el('mbArt').textContent=m.art;
+  el('mbName').textContent=m.name;
+  el('mbDesc').textContent=m.desc;
+  el('mbWx').textContent=G.wx;
+}
+function renderMaps(){
+  const g=el('mapGrid');g.innerHTML='';
+  MAPS.forEach(m=>{
+    const locked=G.lv<m.req,here=G.map===m.id;
+    const d=document.createElement('div');
+    d.className='map-card'+(locked?' locked':'')+(here?' here':'');
+    d.innerHTML=`<div class="map-art">${m.art}</div><div class="map-name">${m.name}</div><div class="map-desc">${m.desc}</div><div class="map-req">Req Lv${m.req}</div><div style="font-size:10px;color:var(--dim);margin-top:3px">${m.wx.join(' • ')}</div>${locked?'<div class="lock-ico">🔒</div>':''}${here?'<div style="position:absolute;top:8px;right:8px;color:var(--green);font-size:12px">✔ HERE</div>':''}`;
+    if(!locked) d.onclick=()=>travel(m.id);
+    g.appendChild(d);
+  });
+  updateMapBanner();
+}
+function travel(id){
+  if(CS.active){notify('Stop fishing first!','e');return;}
+  const m=MAPS.find(x=>x.id===id);
+  if(!m||G.lv<m.req){notify('Level '+m.req+' required!','e');return;}
+  G.map=id;
+  G.wx=m.wx[Math.floor(Math.random()*m.wx.length)];
+  updateTop();renderMaps();
+  log('⛵ Traveled to '+m.name+'!','i');
+  notify('⛵ Arrived at '+m.name,'s');
+  mapAmb(id);wxAmb(G.wx);save();
+}
+
+// ══════════════════════════════════════════
+// FISHING
+// ══════════════════════════════════════════
+function castLine(){
+  if(CS.active)return;
+  if(G.sta<STA_COST){notify('⚡ No stamina! Eat food or rest.','e');return;}
+  if(G.isResting){notify('Wake up first!','e');return;}
+  if(G.lineDur<=0){notify('🧵 Line broken! Buy new one.','e');return;}
+  G.sta=Math.max(0,G.sta-STA_COST);
+  updateTop();SFX.cast();
+  const fid=pickFish();
+  if(!fid){log('Nothing biting...','i');return;}
+  startCatch(fid);
+}
+
+function pickFish(){
+  const m=MAPS.find(x=>x.id===G.map);
+  const mapFish=FISH.filter(f=>{
+    if(f.map!==G.map)return false;
+    if(G.lv<f.lv)return false;
+    if(f.r==='master'&&G.lv<100)return false;
+    if(f.wx&&f.wx!==G.wx)return false;
+    return true;
+  });
+  if(!mapFish.length)return null;
+
+  // Bait bonus
+  let baitBonus=[];
+  if(G.equippedBait&&(G.baitOwned[G.equippedBait]||0)>0){
+    const b=getBait(G.equippedBait);
+    if(b) baitBonus=b.fish;
+  }
+  // Potion luck
+  let luckPow=0;
+  if(G.potion&&G.potCharges>0){
+    const p=POTIONS.find(x=>x.id===G.potion);
+    if(p&&p.eff==='luck') luckPow=p.pw;
+  }
+  const rod=getRod();
+  const rodLuck=(rod?rod.luck:0)/500;
+  const rw={common:Math.max(.01,RARITY_PROB.common-luckPow*.05),uncommon:RARITY_PROB.uncommon+luckPow*.03,epic:RARITY_PROB.epic+luckPow*.01,rare:RARITY_PROB.rare+luckPow*.005,legend:RARITY_PROB.legend+luckPow*.003,master:RARITY_PROB.master+(luckPow>=6?.005:0)};
+
+  const pool=[];
+  mapFish.forEach(f=>{
+    let w=Math.floor((rw[f.r]||.01)*1000);
+    if(baitBonus.includes(f.id)) w=Math.floor(w*3); // 3x weight for bait-matching fish
+    if(rodLuck>0) w=Math.floor(w*(1+rodLuck));
+    for(let i=0;i<w;i++) pool.push(f.id);
+  });
+  if(!pool.length) return mapFish[Math.floor(Math.random()*mapFish.length)].id;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function startCatch(fid){
+  const f=getFish(fid);if(!f)return;
+  CS={active:true,fish:fid,hp:f.hp,maxHp:f.hp,cr:100,seq:genSeq(8),idx:0,fails:0,combo:0,timer:null};
+  el('idleDiv').style.display='none';
+  el('cg').style.display='block';
+  el('castBtn').style.display='none';
+  el('cgSprite').textContent=f.ico;
+  el('cgName').textContent=f.n;
+  const rb=el('cgRarity');rb.textContent=f.r.toUpperCase();rb.className='rb r-'+f.r;
+  updateCatchUI();showDir();
+  log('🐟 '+f.n+' ['+f.r.toUpperCase()+'] appeared!',f.r==='legend'||f.r==='master'?'g':'i');
+  if(f.r==='master') notify('⚠️ MASTER FISH! '+f.n+'!','m');
+  else if(f.r==='legend') notify('🟠 LEGENDARY! '+f.n,'g');
+  else if(f.r==='rare') notify('🔵 RARE! '+f.n,'s');
+}
+
+function genSeq(n){const d=['N','S','E','W'];return Array.from({length:n},()=>d[Math.floor(Math.random()*4)])}
+function dirArr(d){return{N:'↑',S:'↓',E:'→',W:'←'}[d]||d}
+
+function showDir(){
+  if(!CS.active)return;
+  const d=CS.seq[CS.idx%CS.seq.length];
+  let spd=2200;
+  if(G.potion&&G.potCharges>0){const p=POTIONS.find(x=>x.id===G.potion);if(p&&p.eff==='spd')spd=Math.floor(spd*(1+p.pw));}
+  el('dirPrompt').textContent='Press: '+dirArr(d);
+  clearTimeout(CS.timer);
+  CS.timer=setTimeout(()=>{if(CS.active)wrongDir();},spd);
+}
+
+function pd(dir){
+  if(!CS.active)return;
+  const exp=CS.seq[CS.idx%CS.seq.length];
+  clearTimeout(CS.timer);
+  const btns=document.querySelectorAll('.dir-btn');
+  const bi={N:0,W:1,E:2,S:3};
+  const btn=btns[bi[dir]];
+  if(dir===exp){
+    if(btn){btn.classList.add('ok');setTimeout(()=>btn.classList.remove('ok'),300)}
+    SFX.ok();CS.combo++;CS.idx++;
+    const rod=getRod();
+    let dmg=10+(rod?rod.dmg:0);
+    if(G.potion&&G.potCharges>0){const p=POTIONS.find(x=>x.id===G.potion);if(p&&p.eff==='dmg')dmg=Math.floor(dmg*p.pw);}
+    if(CS.combo>=3)dmg=Math.floor(dmg*1.3);
+    CS.hp=Math.max(0,CS.hp-dmg);
+    updateCatchUI();
+    el('combo').textContent=CS.combo>=3?'🔥 COMBO x'+CS.combo+'!':'';
+    if(CS.hp<=0){catchFish();return;}
+    showDir();
+  } else {
+    if(btn){btn.classList.add('no');setTimeout(()=>btn.classList.remove('no'),300)}
+    SFX.no();wrongDir();
+  }
+}
+document.addEventListener('keydown',e=>{
+  if(!CS.active)return;
+  const m={ArrowUp:'N',ArrowDown:'S',ArrowLeft:'W',ArrowRight:'E',w:'N',s:'S',a:'W',d:'E'};
+  if(m[e.key]){e.preventDefault();pd(m[e.key]);}
+});
+
+function wrongDir(){
+  CS.fails++;CS.combo=0;el('combo').textContent='';
+  CS.cr=Math.max(5,CS.cr-(8+CS.fails*2));
+  G.lineDur=Math.max(0,G.lineDur-5);
+  const line=getLine();
+  if(line&&Math.random()<line.brk&&G.lineDur<20){
+    SFX.linesnap();log('💥 Line snapped!','f');
+    G.lineDur=0;endCatch(false);notify('💥 Line broke!','e');return;
+  }
+  updateCatchUI();updateEquip();
+  log('❌ Wrong! Rate: '+Math.floor(CS.cr)+'%','f');
+  showDir();
+}
+
+function catchFish(){
+  clearTimeout(CS.timer);
+  if(Math.random()*100>CS.cr){
+    log('🐟 Slipped away! ('+Math.floor(CS.cr)+'%)','f');
+    G.ssEsc++;SFX.escape();endCatch(false);return;
+  }
+  const f=getFish(CS.fish);
+  const sz=rnd(f.sz[0],f.sz[1]);
+  const wt=rndF(f.wt[0],f.wt[1]);
+  const rod=getRod();
+  const val=Math.floor(f.val*(1+(rod?rod.dmg/200:0))*(0.8+Math.random()*.4));
+  const trophy=checkTrophy(CS.fish,sz,wt);
+  // Consume bait
+  if(G.equippedBait&&(G.baitOwned[G.equippedBait]||0)>0){
+    G.baitOwned[G.equippedBait]--;
+    if(G.baitOwned[G.equippedBait]<=0){notify('🪱 Out of bait!','e');G.equippedBait=null;}
+  }
+  // Consume potion
+  if(G.potion&&G.potCharges>0){G.potCharges--;if(G.potCharges<=0){G.potion=null;notify('Potion expired.','i');}}
+  G.lineDur=Math.max(0,G.lineDur-3);
+  SFX.catch(f.r);
+  gainXP(f.xp);
+  G.ssCaught++;G.ssGold+=val;
+  if(!G.ssBest||f.xp>(getFish(G.ssBest)?.xp||0)) G.ssBest=CS.fish;
+  if(!G.fishCaught[CS.fish]) G.fishCaught[CS.fish]={count:0,maxSz:0,maxWt:0};
+  G.fishCaught[CS.fish].count++;G.fishCaught[CS.fish].maxSz=Math.max(G.fishCaught[CS.fish].maxSz,sz);G.fishCaught[CS.fish].maxWt=Math.max(G.fishCaught[CS.fish].maxWt,wt);
+  log('✅ Caught '+f.n+'! +'+f.xp+'xp','s');
+  updateEquip();updateSS();endCatch(true);
+  pendingCatch={id:CS.fish,n:f.n,ico:f.ico,r:f.r,sz,wt,val,xp:f.xp,trophy};
+  showCatchModal(pendingCatch);save();
+}
+
+function fleeFish(){
+  if(!CS.active)return;
+  clearTimeout(CS.timer);
+  log('⚡ Fled!','f');G.ssEsc++;updateSS();endCatch(false);
+}
+
+function endCatch(ok){
+  CS.active=false;clearTimeout(CS.timer);
+  el('cg').style.display='none';
+  el('idleDiv').style.display='block';
+  el('castBtn').style.display='block';
+  el('combo').textContent='';el('dirPrompt').textContent='';
+}
+
+function updateCatchUI(){
+  const hp=Math.max(0,CS.hp),cr=Math.max(0,CS.cr);
+  el('cgHpBar').style.width=(hp/CS.maxHp*100)+'%';
+  el('cgHpTxt').textContent=Math.ceil(hp)+'/'+CS.maxHp;
+  el('cgCrBar').style.width=cr+'%';
+  el('cgCrTxt').textContent=Math.floor(cr)+'%';
+  el('cgCrBar').style.background=cr>70?'linear-gradient(90deg,#00aa33,#00ff88)':cr>40?'linear-gradient(90deg,#aaaa00,#ffff00)':'linear-gradient(90deg,#aa0000,#ff4400)';
+}
+
+function showCatchModal(d){
+  el('catchIco').textContent=d.ico;
+  el('catchName').textContent=d.n;
+  const rb=el('catchRarity');rb.textContent=d.r.toUpperCase();rb.className='rb r-'+d.r;
+  el('catchXp').textContent='+'+d.xp+' XP';
+  el('catchVal').textContent=d.val+'G';
+  el('catchSize').textContent=d.sz+'cm';
+  el('catchWt').textContent=d.wt+'kg';
+  const td=el('catchTrophy');
+  if(d.trophy){td.style.display='block';const ti=d.trophy==='gold'?'🥇':d.trophy==='silver'?'🥈':'🥉';td.innerHTML=`<div style="font-size:28px">${ti}</div><div style="font-size:12px;margin-top:4px">${d.trophy.toUpperCase()} TROPHY!</div>`;}
+  else td.style.display='none';
+  el('catchModal').classList.add('on');
+}
+
+function storefish(){
+  if(!pendingCatch)return;
+  closeM('catchModal');
+  G.storage.push({...pendingCatch,uid:Date.now()+Math.random()});
+  notify('📦 '+pendingCatch.n+' stored!','s');save();
+}
+
+function sellNow(){
+  if(!pendingCatch)return;
+  closeM('catchModal');
+  G.gold+=pendingCatch.val;
+  notify('💰 Sold '+pendingCatch.n+' for '+pendingCatch.val+'G!','g');
+  updateTop();save();
+}
+
+// ══════════════════════════════════════════
+// XP / LEVEL
+// ══════════════════════════════════════════
+function gainXP(amt){
+  if(G.lv>=100)return;
+  G.xp+=amt;let leveled=false;
+  while(G.lv<100&&G.xp>=xpNeeded(G.lv)){G.xp-=xpNeeded(G.lv);G.lv++;leveled=true;}
+  if(G.lv>=100)G.xp=0;
+  updateTop();if(leveled){SFX.levelup();showLvlUp();}
+}
+function showLvlUp(){
+  el('lvlNum').textContent=G.lv;
+  const unlocks=MAPS.filter(m=>m.req===G.lv).map(m=>'🗺️ '+m.name+' unlocked!');
+  el('lvlUnlocks').innerHTML=unlocks.join('<br>');
+  el('lvlModal').classList.add('on');
+  notify('⬆️ LEVEL UP! Lv'+G.lv,'g');
+}
+
+// ══════════════════════════════════════════
+// TROPHIES
+// ══════════════════════════════════════════
+function checkTrophy(fid,sz,wt){
+  const f=getFish(fid);if(!f)return null;
+  const pct=sz/f.sz[1];
+  let tier=pct>=.95?'gold':pct>=.85?'silver':pct>=.75?'bronze':null;
+  if(!tier)return null;
+  const ex=G.trophies.find(t=>t.fid===fid);
+  const rank={bronze:1,silver:2,gold:3};
+  if(ex&&rank[ex.tier]>=rank[tier])return null;
+  if(ex){ex.tier=tier;ex.sz=sz;ex.wt=wt;}
+  else G.trophies.push({fid,n:f.n,ico:f.ico,tier,sz,wt,r:f.r});
+  return tier;
+}
+function renderTrophies(){
+  const g=el('trophyGrid');
+  if(!G.trophies.length){g.innerHTML='<div class="empty">No trophies yet!<br><span style="font-size:11px;color:var(--dim)">Catch large fish to earn them.</span></div>';return;}
+  g.innerHTML='';
+  G.trophies.forEach(t=>{
+    const ti=t.tier==='gold'?'🥇':t.tier==='silver'?'🥈':'🥉';
+    const d=document.createElement('div');d.className='t-card '+t.tier;
+    d.innerHTML=`<div class="t-ico">${t.ico}</div><div style="font-size:26px;margin-bottom:6px">${ti}</div><div class="t-name" style="color:${rarityColor(t.r)}">${t.n}</div><div class="t-desc">${t.tier.toUpperCase()} TROPHY</div><div style="font-size:10px;color:var(--dim);margin-top:4px">${t.sz}cm • ${t.wt}kg</div>`;
+    g.appendChild(d);
+  });
+}
+
+// ══════════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════════
+function renderStorage(){
+  const g=el('storGrid');el('storCount').textContent=G.storage.length;
+  if(!G.storage.length){g.innerHTML='<div class="empty"><div class="empty-ico">🪣</div><p>Storage empty!</p></div>';return;}
+  const groups={};
+  G.storage.forEach(i=>{const k=i.n+'_'+i.r;if(!groups[k])groups[k]={ico:i.ico,n:i.n,r:i.r,items:[]};groups[k].items.push(i);});
+  g.innerHTML='';
+  Object.values(groups).forEach(gr=>{
+    const tot=gr.items.reduce((s,i)=>s+i.val,0);
+    const troph=gr.items.find(i=>i.trophy);
+    const ti=troph?(troph.trophy==='gold'?'🥇':troph.trophy==='silver'?'🥈':'🥉'):'';
+    const d=document.createElement('div');d.className='fish-card';d.style.borderColor=rarityColor(gr.r);
+    d.innerHTML=`${ti?`<div class="fish-trophy">${ti}</div>`:''}
+    <div class="fi">${gr.ico}</div>
+    <div class="fn" style="color:${rarityColor(gr.r)}">${gr.n}</div>
+    <div class="rb r-${gr.r}" style="margin:3px auto">${gr.r.toUpperCase()}</div>
+    <div class="fq">Qty: ${gr.items.length}</div>
+    <div class="fv">${tot}G total</div>
+    <button class="sell-btn" onclick="sellGroup('${gr.n}','${gr.r}')">💰 Sell (${tot}G)</button>`;
+    g.appendChild(d);
+  });
+}
+function sellGroup(n,r){
+  let tot=0;
+  G.storage=G.storage.filter(i=>{if(i.n===n&&i.r===r){tot+=i.val;return false;}return true;});
+  G.gold+=tot;updateTop();renderStorage();
+  notify('💰 Sold '+n+' for '+tot+'G!','g');log('💰 Sold '+n+' for '+tot+'G','g');save();
+}
+function sellAll(){
+  if(!G.storage.length){notify('Nothing to sell!','e');return;}
+  const tot=G.storage.reduce((s,i)=>s+i.val,0);
+  G.storage=[];G.gold+=tot;updateTop();renderStorage();
+  notify('💰 Sold everything for '+tot+'G!','g');log('💰 Sold all for '+tot+'G','g');save();
+}
+
+// ══════════════════════════════════════════
+// SHOP
+// ══════════════════════════════════════════
+function renderShop(){
+  renderRods();renderLines();renderPots();renderSpec();
+}
+function renderRods(){
+  const c=el('shopRods');c.innerHTML='';
+  RODS.forEach(r=>{
+    const eq=G.rod===r.id,afford=G.gold>=r.price;
+    const d=document.createElement('div');d.className='s-item';
+    d.innerHTML=`<div class="s-ico">${r.ico}</div><div class="s-info"><div class="s-name">${r.n}${eq?' <span style="color:var(--green);font-size:10px">[EQ]</span>':''}</div><div class="s-desc">+${r.dmg}% dmg | +${r.luck}% luck</div><div class="s-tier ${tierClass(r.tier)}">${r.tier.toUpperCase()}</div><div class="s-price">${r.price===0?'FREE':r.price.toLocaleString()+'G'}</div></div>${r.price>0&&!eq?`<button class="buy-btn" ${afford?'':'disabled'} onclick="buyRod('${r.id}',${r.price})">${afford?'BUY':'💸'}</button>`:eq?'<span style="color:var(--green);font-size:18px">✔</span>':''}`;
+    c.appendChild(d);
+  });
+}
+function renderLines(){
+  const c=el('shopLines');c.innerHTML='';
+  LINES.forEach(l=>{
+    const eq=G.line===l.id,afford=G.gold>=l.price;
+    const d=document.createElement('div');d.className='s-item';
+    d.innerHTML=`<div class="s-ico">${l.ico}</div><div class="s-info"><div class="s-name">${l.n}${eq?' <span style="color:var(--green);font-size:10px">[EQ]</span>':''}</div><div class="s-desc">Dur: ${l.dur} | Brk: ${(l.brk*100).toFixed(1)}%</div><div class="s-tier ${tierClass(l.tier)}">${l.tier.toUpperCase()}</div><div class="s-price">${l.price===0?'FREE':l.price.toLocaleString()+'G'}</div></div>${l.price>0&&!eq?`<button class="buy-btn" ${afford?'':'disabled'} onclick="buyLine('${l.id}',${l.price})">${afford?'BUY':'💸'}</button>`:eq?'<span style="color:var(--green);font-size:18px">✔</span>':''}`;
+    c.appendChild(d);
+  });
+}
+function renderPots(){
+  const c=el('shopPots');c.innerHTML='';
+  POTIONS.forEach(p=>{
+    const eq=G.potion===p.id,afford=G.gold>=p.price;
+    const d=document.createElement('div');d.className='s-item';
+    d.innerHTML=`<div class="s-ico">${p.ico}</div><div class="s-info"><div class="s-name">${p.n}${eq?' <span style="color:var(--purple);font-size:10px">[EQ]</span>':''}</div><div class="s-desc">${p.eff.toUpperCase()} x${p.pw} | ${p.dur} casts${eq?' | '+G.potCharges+' left':''}</div><div class="s-price">${p.price.toLocaleString()}G</div></div><button class="buy-btn" ${afford?'':'disabled'} onclick="buyPot('${p.id}',${p.price})">${afford?'BUY':'💸'}</button>`;
+    c.appendChild(d);
+  });
+}
+function renderSpec(){
+  const c=el('shopSpec');
+  c.innerHTML=`<div class="s-item"><div class="s-ico">🔧</div><div class="s-info"><div class="s-name">Line Repair Kit</div><div class="s-desc">Fully repairs your fishing line.</div><div class="s-price">50G</div></div><button class="buy-btn" ${G.gold>=50?'':'disabled'} onclick="repairLine()">REPAIR</button></div>
+  <div class="s-item"><div class="s-ico">📖</div><div class="s-info"><div class="s-name">Fish Encyclopedia</div><div class="s-desc">Species caught: ${Object.keys(G.fishCaught).length}/${FISH.length}</div><div class="s-price">Free</div></div><button class="buy-btn" onclick="notify('📖 Caught '+${Object.keys(G.fishCaught).length}+' of ${FISH.length} species!','i')">VIEW</button></div>`;
+}
+function buyRod(id,price){if(G.gold<price){notify('Not enough gold!','e');return;}G.gold-=price;G.rod=id;SFX.buy();updateTop();updateEquip();renderRods();save();notify('🪄 '+RODS.find(r=>r.id===id).n+' equipped!','s');}
+function buyLine(id,price){if(G.gold<price){notify('Not enough gold!','e');return;}G.gold-=price;G.line=id;G.lineDur=LINES.find(l=>l.id===id).dur;SFX.buy();updateTop();updateEquip();renderLines();save();notify('🧵 '+LINES.find(l=>l.id===id).n+' equipped!','s');}
+function buyPot(id,price){if(G.gold<price){notify('Not enough gold!','e');return;}const p=POTIONS.find(x=>x.id===id);G.gold-=price;G.potion=id;G.potCharges=p.dur;SFX.buy();updateTop();updateEquip();renderPots();save();notify('🧪 '+p.n+'! ('+p.dur+' casts)','s');}
+function repairLine(){if(G.gold<50){notify('Not enough gold!','e');return;}G.gold-=50;G.lineDur=getLine().dur;SFX.buy();updateTop();updateEquip();save();notify('🔧 Line repaired!','s');}
+
+// ══════════════════════════════════════════
+// BAIT
+// ══════════════════════════════════════════
+function renderBait(){
+  const g=el('baitGrid');g.innerHTML='';
+  const eq=G.equippedBait?getBait(G.equippedBait):null;
+  el('baitEqIco').textContent=eq?eq.ico:'❌';
+  el('baitEqName').textContent=eq?eq.n:'None';
+  el('baitEqCount').textContent=eq?(G.baitOwned[eq.id]||0)+' remaining':'No bait equipped';
+  BAITS.forEach(b=>{
+    const own=G.baitOwned[b.id]||0,locked=G.lv<b.lv,isEq=G.equippedBait===b.id;
+    const d=document.createElement('div');d.className='s-item';if(isEq)d.style.borderColor='var(--green)';if(locked)d.style.opacity='.5';
+    d.innerHTML=`<div class="s-ico">${b.ico}</div><div class="s-info"><div class="s-name">${b.n}${isEq?' <span style="color:var(--green);font-size:10px">[ON HOOK]</span>':''}</div><div class="s-desc">Attracts: ${b.fish.slice(0,3).map(fid=>getFish(fid)?.n||fid).join(', ')}${b.fish.length>3?' +more':''}</div><div style="font-size:10px;color:var(--dim)">Owned: ${own}/${b.max} | Lv${b.lv}</div><div class="s-price">${b.price}G</div></div><div style="display:flex;flex-direction:column;gap:5px">${!locked&&own<b.max&&G.gold>=b.price?`<button class="buy-btn" onclick="buyBait('${b.id}')">BUY</button>`:''}${own>0&&!isEq?`<button class="buy-btn" style="border-color:var(--green);color:var(--green)" onclick="equipBait('${b.id}')">EQUIP</button>`:''}${isEq?`<button class="buy-btn" style="border-color:var(--red);color:var(--red)" onclick="unequipBait()">REMOVE</button>`:''}</div>`;
+    g.appendChild(d);
+  });
+}
+function buyBait(id){const b=getBait(id);if(!b||G.gold<b.price||(G.baitOwned[id]||0)>=b.max)return;G.gold-=b.price;G.baitOwned[id]=(G.baitOwned[id]||0)+1;SFX.vending();updateTop();renderBait();save();notify('🪱 Bought '+b.n,'s');}
+function equipBait(id){G.equippedBait=id;SFX.buy();renderBait();updateEquip();save();notify('🪝 '+getBait(id).n+' on the hook!','s');}
+function unequipBait(){G.equippedBait=null;renderBait();updateEquip();save();}
+
+// ══════════════════════════════════════════
+// FOOD
+// ══════════════════════════════════════════
+function renderFood(){
+  const g=el('foodGrid');g.innerHTML='';
+  FOODS.forEach(f=>{
+    const own=G.foodOwned[f.id]||0;
+    const d=document.createElement('div');d.className='f-card';
+    d.innerHTML=`<div class="f-ico">${f.ico}</div><div class="f-name">${f.n}</div>${f.sta>0?`<div class="f-effect" style="color:var(--green)">⚡+${f.sta}% STA</div>`:''}${f.hp>0?`<div class="f-effect" style="color:var(--red)">❤️+${f.hp}% HP</div>`:''}
+    <div class="f-stock">Stock: ${own}/${f.max}</div><div class="f-price">${f.price}G</div>
+    ${G.gold>=f.price&&own<f.max?`<button class="buy-btn" onclick="buyFood('${f.id}')">BUY</button>`:'<button class="buy-btn" disabled>${own>=f.max?"MAX STOCK":"Need "+f.price+"G"}</button>'}
+    ${own>0?`<button class="eat-btn" onclick="eatFood('${f.id}')">🍴 EAT</button>`:''}`;
+    g.appendChild(d);
+  });
+}
+function buyFood(id){const f=getFood(id);if(!f||G.gold<f.price||(G.foodOwned[id]||0)>=f.max)return;G.gold-=f.price;G.foodOwned[id]=(G.foodOwned[id]||0)+1;SFX.vending();updateTop();renderFood();save();notify(f.ico+' Bought '+f.n,'s');}
+function eatFood(id){
+  const f=getFood(id);if(!f||(G.foodOwned[id]||0)<=0)return;
+  if(SFX.food[f.snd]) SFX.food[f.snd]();
+  const sg=Math.floor(MAX_STA*f.sta/100),hg=Math.floor(MAX_HP*f.hp/100);
+  G.sta=Math.min(MAX_STA,G.sta+sg);G.hp=Math.min(MAX_HP,G.hp+hg);
+  G.foodOwned[id]--;updateTop();renderFood();updateEquip();save();
+  notify(f.ico+' Ate '+f.n+'!'+(sg>0?' ⚡+'+sg:'')+(hg>0?' ❤️+'+hg:''),'s');
+  log(f.ico+' Ate '+f.n+(sg>0?' +'+sg+'sta':'')+(hg>0?' +'+hg+'hp':''),'s');
+}
+
+// ══════════════════════════════════════════
+// INN
+// ══════════════════════════════════════════
+function renderInn(){
+  const inn=getInn(G.map);
+  const c=el('innContent');
+  c.innerHTML=`<div class="inn-card"><div class="inn-art">${inn.art}</div><div class="inn-name">${inn.n}</div><div style="font-size:11px;color:var(--dim);margin-bottom:12px">${inn.desc}</div><div class="inn-stats"><div class="inn-stat"><div class="inn-stat-lbl">COST</div><div class="inn-stat-val" style="color:var(--gold)">${inn.price}G</div></div><div class="inn-stat"><div class="inn-stat-lbl">REST TIME</div><div class="inn-stat-val" style="color:var(--accent)">${inn.hrs}h</div></div><div class="inn-stat"><div class="inn-stat-lbl">RESTORE</div><div class="inn-stat-val" style="color:var(--green);font-size:11px">⚡+${inn.sta}%<br>❤️+${inn.hp}%</div></div></div><div style="font-size:11px;color:var(--dim);margin-bottom:10px">Your: ⚡${G.sta}/${MAX_STA} ❤️${G.hp}/${MAX_HP}</div>${G.isResting?`<button class="btn btn-gold" onclick="openInn()" style="width:100%;max-width:300px">📊 VIEW REST PROGRESS</button>`:`<button class="btn btn-gold" onclick="openInn()" style="width:100%;max-width:300px;${G.gold<inn.price?'opacity:.5':''}" ${G.gold<inn.price?'disabled':''}>🛏️ CHECK IN${G.gold<inn.price?' (Need '+(inn.price-G.gold)+'G)':' ('+inn.price+'G)'}</button>`}</div>`;
+}
+function openInn(){
+  const inn=getInn(G.map);
+  el('innMTitle').textContent=inn.art+' '+inn.n;
+  el('innMArt').textContent=G.isResting?'😴':'🛏️';
+  el('innMDesc').textContent=inn.desc;
+  el('innMCost').textContent=inn.price+'G';
+  el('innMTime').textContent=inn.hrs+'h';
+  el('innMRestore').innerHTML='⚡+'+inn.sta+'%<br>❤️+'+inn.hp+'%';
+  el('innCurSta').textContent=G.sta+'/'+MAX_STA;
+  el('innCurHp').textContent=G.hp+'/'+MAX_HP;
+  if(G.isResting){el('innCheckIn').style.display='none';el('innResting').style.display='block';updateRestProgress();innAmb(G.restMapId||G.map);}
+  else{el('innCheckIn').style.display='block';el('innResting').style.display='none';}
+  el('innModal').classList.add('on');
+}
+function checkIn(){
+  const inn=getInn(G.map);
+  if(G.gold<inn.price){notify('Not enough gold!','e');return;}
+  if(CS.active){notify('Stop fishing first!','e');return;}
+  G.gold-=inn.price;G.isResting=true;G.restStart=Date.now();G.restDuration=inn.hrs*3600000;G.restMapId=G.map;
+  el('innCheckIn').style.display='none';el('innResting').style.display='block';
+  SFX.innSleep();innAmb(G.map);startRestTimer();updateTop();renderInn();save();
+  log('🛏️ Checked into '+inn.n,'g');notify('🛏️ Sweet dreams!','g');
+}
+function startRestTimer(){
+  if(restTimer)clearInterval(restTimer);
+  restTimer=setInterval(()=>{
+    if(!G.isResting){clearInterval(restTimer);return;}
+    updateRestProgress();
+    if(Date.now()-G.restStart>=G.restDuration) autoWake();
+  },1000);
+}
+function updateRestProgress(){
+  const el_=document.getElementById;
+  const elapsed=Date.now()-G.restStart;
+  const pct=Math.min(100,(elapsed/G.restDuration)*100);
+  const rem=Math.max(0,G.restDuration-elapsed);
+  const h=Math.floor(rem/3600000),m=Math.floor((rem%3600000)/60000),s=Math.floor((rem%60000)/1000);
+  const rf=el('restFill');if(rf)rf.style.width=pct+'%';
+  const tl=el('restTimeLeft');if(tl)tl.textContent='Time left: '+h+'h '+m+'m '+s+'s';
+  const rs=el('innRestStat');if(rs)rs.textContent=pct<100?'Resting... '+Math.floor(pct)+'%':'✅ Done!';
+  const mi=el('innMArt');if(mi)mi.textContent=pct>80?'🌅':pct>50?'😪':'😴';
+}
+function autoWake(){
+  clearInterval(restTimer);G.isResting=false;
+  const inn=getInn(G.restMapId||G.map);
+  const sg=Math.floor(MAX_STA*inn.sta/100),hg=Math.floor(MAX_HP*inn.hp/100);
+  G.sta=Math.min(MAX_STA,G.sta+sg);G.hp=Math.min(MAX_HP,G.hp+hg);
+  SFX.innWake();stopInnAmb();updateTop();save();
+  notify('🌅 Rested! ⚡+'+sg+' ❤️+'+hg,'g');log('🌅 Fully rested! +'+sg+'sta +'+hg+'hp','g');
+  closeM('innModal');renderInn();
+}
+function checkOut(){
+  clearInterval(restTimer);
+  const pct=Math.min(1,(Date.now()-G.restStart)/G.restDuration);
+  const inn=getInn(G.restMapId||G.map);
+  const sg=Math.floor(MAX_STA*inn.sta/100*pct),hg=Math.floor(MAX_HP*inn.hp/100*pct);
+  G.isResting=false;G.sta=Math.min(MAX_STA,G.sta+sg);G.hp=Math.min(MAX_HP,G.hp+hg);
+  SFX.innWake();stopInnAmb();updateTop();save();
+  notify('😴 Woke early. ⚡+'+sg+' ❤️+'+hg,'i');closeM('innModal');renderInn();
+}
+function startScream(){
+  if(G.gold<500){notify('Need 500G!','e');return;}
+  G.gold-=500;updateTop();save();
+  el('screamBtn').style.display='none';el('screamMeter').style.display='block';
+  el('screamFb').textContent='🎤 SCREAM NOW! 3 seconds!';
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    screamStream=stream;
+    const ctx=ac(),src=ctx.createMediaStreamSource(stream),an=ctx.createAnalyser();
+    an.fftSize=256;src.connect(an);
+    let maxVol=0,elapsed=0;
+    screamInterval=setInterval(()=>{
+      const data=new Uint8Array(an.frequencyBinCount);an.getByteFrequencyData(data);
+      const vol=data.reduce((a,b)=>a+b,0)/data.length;
+      maxVol=Math.max(maxVol,vol);
+      el('screamFill').style.width=Math.min(100,(vol/128)*100)+'%';
+      elapsed+=200;
+      if(elapsed>=3000){
+        clearInterval(screamInterval);stream.getTracks().forEach(t=>t.stop());
+        el('screamMeter').style.display='none';el('screamBtn').style.display='block';
+        if(maxVol>=40){G.restDuration=Math.max(0,G.restDuration-5*3600000);SFX.scream();el('screamFb').textContent='😱 SCREAM POWER! -5 hours!';notify('😱 -5 hours rest!','g');log('😱 Screamed! -5hr rest','g');}
+        else{G.gold+=500;updateTop();save();el('screamFb').textContent='Too quiet! Try louder!';notify('Too quiet! Gold refunded.','e');}
+      }
+    },200);
+  }).catch(()=>{G.gold+=500;updateTop();save();el('screamBtn').style.display='block';el('screamMeter').style.display='none';notify('Mic unavailable!','e');});
+}
+
+// ══════════════════════════════════════════
+// EQUIP SIDEBAR
+// ══════════════════════════════════════════
+function updateEquip(){
+  const rod=getRod(),line=getLine();
+  const rv=el('eqRod');rv.textContent=rod?rod.n:'None';rv.style.color=rod?getTierColor(rod.tier):'var(--dim)';
+  const lv=el('eqLine');lv.textContent=line?line.n:'None';lv.style.color=line?getTierColor(line.tier):'var(--dim)';
+  const maxDur=line?line.dur:100,durPct=Math.max(0,(G.lineDur/maxDur)*100);
+  const df=el('durFill');df.style.width=durPct+'%';df.style.background=durPct>60?'var(--green)':durPct>25?'var(--gold)':'var(--red)';
+  el('durTxt').textContent=Math.max(0,G.lineDur)+'/'+maxDur;
+  const bv=el('eqBait');const eqb=G.equippedBait?getBait(G.equippedBait):null;
+  bv.textContent=eqb?(eqb.ico+' '+eqb.n+' x'+(G.baitOwned[eqb.id]||0)):'None';bv.style.color=eqb?'var(--green)':'var(--dim)';
+  const pv=el('eqPot');const eqp=G.potion?POTIONS.find(x=>x.id===G.potion):null;
+  pv.textContent=eqp?(eqp.ico+' '+eqp.n+' x'+G.potCharges):'None';pv.style.color=eqp?'var(--purple)':'var(--dim)';
+}
+function getTierColor(t){return{common:'var(--common)',uncommon:'var(--uncommon)',epic:'var(--epic)',rare:'var(--rare)',legend:'var(--legend)',mythic:'var(--master)'}[t]||'var(--text)'}
+function updateSS(){el('ssCaught').textContent=G.ssCaught;el('ssEsc').textContent=G.ssEsc;el('ssGold').textContent=G.ssGold;el('ssBest').textContent=G.ssBest?(getFish(G.ssBest)?.n||'?'):'None';}
+
+// ══════════════════════════════════════════
+// SAVE / LOAD
+// ══════════════════════════════════════════
+function save(){
+  try{G.lastOnline=Date.now();localStorage.setItem(SAVE_KEY,JSON.stringify(G));showSaveIco();}catch(e){}
+}
+function showSaveIco(){const s=el('saveIco');s.style.opacity='1';clearTimeout(s._t);s._t=setTimeout(()=>s.style.opacity='0',2000);}
+function startNewGame(){
+  const n=el('nameInput').value.trim();
+  if(!n){notify('Please enter your name!','e');return;}
+  G.name=n;initGame();
+}
+function loadGame(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);if(!raw)return;
+    const d=JSON.parse(raw);
+    Object.assign(G,d);
+    G.sta=G.sta!=null?G.sta:MAX_STA;G.hp=G.hp!=null?G.hp:MAX_HP;
+    G.baitOwned=G.baitOwned||{};G.equippedBait=G.equippedBait||null;
+    G.foodOwned=G.foodOwned||{};G.isResting=G.isResting||false;
+    G.restStart=G.restStart||0;G.restDuration=G.restDuration||0;
+    G.restMapId=G.restMapId||'riverside';
+    // Offline stamina recovery
+    const offline=(Date.now()-(G.lastOnline||Date.now()))/60000;
+    if(offline>1){const rec=Math.floor(offline);G.sta=Math.min(MAX_STA,G.sta+rec);if(rec>5){notify('⚡ +'+rec+' stamina recovered!','s');}}
+    initGame();
+    log('💾 Loaded! Welcome back '+G.name+'!','g');
+    notify('💾 Welcome back '+G.name+'!','g');
+    if(G.isResting)startRestTimer();
+  }catch(e){console.warn('Load failed:',e);}
+}
+function deleteSave(){
+  if(!confirm('Delete save? This cannot be undone!'))return;
+  localStorage.removeItem(SAVE_KEY);
+  el('savedBanner').style.display='none';el('newGameDiv').style.display='flex';
+  notify('Save deleted.','e');
+}
+function initGame(){
+  el('startScreen').style.display='none';el('gameScreen').style.display='flex';
+  el('pname').textContent=G.name.toUpperCase();
+  updateTop();updateEquip();updateSS();
+  setTimeout(()=>{mapAmb(G.map);wxAmb(G.wx);},500);
+  if(wxTimer)clearInterval(wxTimer);
+  wxTimer=setInterval(setWeather,60000);
+  setInterval(save,30000);
+  setInterval(()=>{G.lastOnline=Date.now();},60000);
+}
+
+// Check save on load
+window.addEventListener('load',()=>{
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(raw){
+      const d=JSON.parse(raw);
+      const t=new Date(d.lastOnline||Date.now());
+      el('savedInfo').innerHTML='👤 '+d.name+'<br>⭐ Level '+d.lv+'  💰 '+(d.gold||0).toLocaleString()+'G<br>🐟 '+(d.totalCaught||Object.values(d.fishCaught||{}).reduce((s,v)=>s+(v.count||0),0))+' fish caught<br>🕐 '+t.toLocaleDateString()+' '+t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      el('savedBanner').style.display='block';el('newGameDiv').style.display='none';
+    }
+  }catch(e){}
+});
+</script>
+</body>
+</html>
